@@ -1,7 +1,7 @@
 ﻿using ECommerce.Domain.Enums;
 using ECommerce.Domain.Models.Orders;
 
-namespace ECommerce.Application.Interfaces
+namespace ECommerce.Domain.Abstractions
 {
   public interface IOrderRepository
   {

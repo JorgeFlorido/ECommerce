@@ -10,5 +10,6 @@ namespace ECommerce.Domain.Models.Orders
     public OrderStatus Status { get; set; }
     public decimal TotalAmount { get; set; }
     public List<OrderItem> Items { get; set; } = [];
+    public Payment? Payment { get; set; }
   }
 }

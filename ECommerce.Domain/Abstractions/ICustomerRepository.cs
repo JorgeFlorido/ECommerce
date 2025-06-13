@@ -1,8 +1,8 @@
 ﻿using ECommerce.Domain.Models;
 
-namespace ECommerce.Application.Interfaces
+namespace ECommerce.Domain.Abstractions
 {
-  internal interface ICustomerRepository
+  public interface ICustomerRepository
   {
     Task<IEnumerable<Customer>> GetAllCustomersAsync(CancellationToken cancellationToken = default);
     Task<Customer?> GetCustomerByIdAsync(Guid customerId, CancellationToken cancellationToken = default);

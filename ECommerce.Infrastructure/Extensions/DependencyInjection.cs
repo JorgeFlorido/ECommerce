@@ -1,4 +1,6 @@
 ﻿using ECommerce.Database;
+using ECommerce.Domain.Abstractions;
+using ECommerce.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +14,15 @@ namespace ECommerce.Infrastructure.Extensions
       services.AddDbContext<AppDbContext>(options =>
           options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
 
+
+      return services;
+    }
+
+    public static IServiceCollection AddRepositories(this IServiceCollection services)
+    {
+      services.AddScoped<IProductRepository, ProductRepository>();
+      services.AddScoped<IOrderRepository, OrderRepository>();
+      services.AddScoped<ICustomerRepository, CustomerRepository>();
       return services;
     }
   }

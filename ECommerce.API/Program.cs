@@ -1,6 +1,4 @@
-
 using ECommerce.Infrastructure.Extensions;
-using System;
 
 namespace ECommerce.API
 {
@@ -10,18 +8,17 @@ namespace ECommerce.API
     {
       var builder = WebApplication.CreateBuilder(args);
 
-      // Add services to the container.
-
       builder.Services.AddControllers();
-      // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
       builder.Services.AddEndpointsApiExplorer();
       builder.Services.AddSwaggerGen();
 
       builder.Services.AddInfrastructure(builder.Configuration);
+      builder.Services.AddRepositories();
 
       var app = builder.Build();
 
-      // Configure the HTTP request pipeline.
+      app.UseMiddleware<ExceptionMiddleware>();
+
       if (app.Environment.IsDevelopment())
       {
         app.UseSwagger();
@@ -31,7 +28,6 @@ namespace ECommerce.API
       app.UseHttpsRedirection();
 
       app.UseAuthorization();
-
 
       app.MapControllers();
 
