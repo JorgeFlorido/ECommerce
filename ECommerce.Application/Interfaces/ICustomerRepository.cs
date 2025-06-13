@@ -1,0 +1,13 @@
+﻿using ECommerce.Domain.Models;
+
+namespace ECommerce.Application.Interfaces
+{
+  internal interface ICustomerRepository
+  {
+    Task<IEnumerable<Customer>> GetAllCustomersAsync(CancellationToken cancellationToken = default);
+    Task<Customer?> GetCustomerByIdAsync(Guid customerId, CancellationToken cancellationToken = default);
+    Task AddCustomerAsync(Customer customer, CancellationToken cancellationToken = default);
+    Task UpdateCustomerAsync(Customer customer, CancellationToken cancellationToken = default);
+    Task DeleteCustomerAsync(Guid customerId, CancellationToken cancellationToken = default);
+  }
+}
