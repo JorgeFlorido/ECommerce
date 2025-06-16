@@ -13,10 +13,10 @@ namespace ECommerce.Infrastructure.Extensions
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
       services.AddDbContext<AppDbContext>(options =>
-          options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
+          options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
       services.AddDbContext<AppIdentityDbContext>(options =>
-          options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
+          options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
       return services;
     }
