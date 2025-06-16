@@ -1,5 +1,6 @@
 ﻿using ECommerce.Database;
 using ECommerce.Domain.Abstractions;
+using ECommerce.Infrastructure.Identity;
 using ECommerce.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +15,8 @@ namespace ECommerce.Infrastructure.Extensions
       services.AddDbContext<AppDbContext>(options =>
           options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
 
+      services.AddDbContext<AppIdentityDbContext>(options =>
+          options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
 
       return services;
     }

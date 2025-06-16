@@ -19,10 +19,10 @@ namespace ECommerce.Application.Handlers.Products
 
     public async Task<Unit> Handle(UpdateProductCommand command, CancellationToken cancellationToken)
     {
-      _ = await _productRepository.GetProductByIdAsync(command.Product.Id, cancellationToken)
-        ?? throw new KeyNotFoundException($"Product with ID {command.Product.Id} not found.");
+      _ = await _productRepository.GetProductByIdAsync(command.ProductId, cancellationToken)
+        ?? throw new KeyNotFoundException($"Product with ID {command.ProductId} not found.");
 
-      var updatedProduct = _mapper.Map<Product>(command.Product);
+      var updatedProduct = _mapper.Map<Product>(command);
       await _productRepository.UpdateProductAsync(updatedProduct, cancellationToken);
       return Unit.Value;
     }

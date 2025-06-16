@@ -1,10 +1,14 @@
-﻿using ECommerce.Domain.Models;
-using MediatR;
+﻿using MediatR;
 
 namespace ECommerce.Application.Requests.Commands.Products
 {
   public class UpdateProductCommand : IRequest<Unit>
   {
-    public required Product Product { get; set; }
+    public Guid ProductId { get; set; }
+    public string? Name { get; set; }
+    public string? Description { get; set; }
+    public decimal Price { get; set; }
+    public string? ImageUrl { get; set; }
+    public Guid CategoryId { get; set; }
   }
 }

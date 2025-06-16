@@ -1,5 +1,6 @@
 ﻿using ECommerce.Domain.Models;
 using ECommerce.Domain.Models.Orders;
+using ECommerce.Domain.Models.User;
 using Microsoft.EntityFrameworkCore;
 
 namespace ECommerce.Database

@@ -1,4 +1,4 @@
-﻿using ECommerce.Domain.Models;
+﻿using ECommerce.Domain.Models.User;
 
 namespace ECommerce.Domain.Abstractions
 {
