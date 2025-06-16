@@ -1,4 +1,6 @@
 using ECommerce.Infrastructure.Extensions;
+using ECommerce.Application.Extensions;
+using ECommerce.API.Extensions;
 
 namespace ECommerce.API
 {
@@ -14,6 +16,10 @@ namespace ECommerce.API
 
       builder.Services.AddInfrastructure(builder.Configuration);
       builder.Services.AddRepositories();
+      builder.Services.AddApplication();
+
+      builder.Services.AddValidators();
+      builder.Services.AddMappers();
 
       var app = builder.Build();
 

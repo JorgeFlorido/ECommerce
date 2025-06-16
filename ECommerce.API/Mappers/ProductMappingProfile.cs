@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using ECommerce.API.Models.Requests.Product;
-using ECommerce.Domain.Models;
+using ECommerce.Application.Requests.Commands.Products;
 
 namespace ECommerce.API.Mappers
 {
@@ -8,9 +8,7 @@ namespace ECommerce.API.Mappers
   {
     public ProductMappingProfile() 
     {
-      CreateMap<AddProductRequest, Product>()
-        .ForMember(dest => dest.Id, opt => opt.Ignore())
-        .ForMember(dest => dest.StockQuantity, opt => opt.Ignore());
+      CreateMap<AddProductRequest, AddProductCommand>();
     }
   }
 }

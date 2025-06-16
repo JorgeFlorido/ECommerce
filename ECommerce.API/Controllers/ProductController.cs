@@ -1,7 +1,8 @@
 ﻿using AutoMapper;
 using ECommerce.API.Models.Requests.Product;
-using ECommerce.Application.Interfaces;
-using ECommerce.Domain.Models;
+using ECommerce.Application.Requests.Commands.Products;
+using ECommerce.Application.Requests.Queries.Products;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerce.API.Controllers
@@ -10,41 +11,42 @@ namespace ECommerce.API.Controllers
   [ApiController]
   public class ProductController : ControllerBase
   {
-    private readonly IProductService _productService;
+    private readonly IMediator _mediator;
     private readonly IMapper _mapper;
 
-    public ProductController(IProductService productService, IMapper mapper)
+    public ProductController(IMediator mediator, IMapper mapper)
     {
-      _productService = productService;
+      _mediator = mediator;
       _mapper = mapper;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAllProducts()
     {
-      var products = await _productService.GetAllProductsAsync();
+      var products = await _mediator.Send(new GetAllProductsQuery());
       return Ok(products);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetProductById(Guid id)
     {
-      var product = await _productService.GetProductByIdAsync(id);
-      return Ok(product);
+      var result = await _mediator.Send(new GetProductByIdQuery { Id = id });
+      return Ok(result);
     }
 
     [HttpPost]
     public async Task<IActionResult> AddProduct([FromBody] AddProductRequest productRequest)
     {
-      var product = _mapper.Map<Product>(productRequest);
-      await _productService.AddProductAsync(product);
-      return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, product);
+      var addProductCommand = _mapper.Map<AddProductCommand>(productRequest);
+      var result = await _mediator.Send(addProductCommand);
+      return CreatedAtAction(nameof(GetProductById), new { id = result }, result);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteProduct(Guid id)
     {
-      await _productService.DeleteProductAsync(id);
+      var deleteProductCommand = new DeleteProductCommand { ProductId = id };
+      await _mediator.Send(deleteProductCommand);
       return NoContent();
     }
   }
