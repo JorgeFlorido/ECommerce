@@ -1,6 +1,8 @@
-﻿namespace ECommerce.API.Models.Requests.Product
+﻿using MediatR;
+
+namespace ECommerce.Application.Requests.Commands.Products
 {
-  public class AddProductRequest
+  public class AddProductCommand : IRequest<Guid>
   {
     public string? Name { get; set; }
     public string? Description { get; set; }
