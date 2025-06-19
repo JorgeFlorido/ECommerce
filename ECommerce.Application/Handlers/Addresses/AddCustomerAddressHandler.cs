@@ -2,16 +2,19 @@ using ECommerce.Application.Requests.Commands.Addresses;
 using ECommerce.Domain.Abstractions;
 using ECommerce.Domain.Models;
 using MediatR;
+using AutoMapper;
 
 namespace ECommerce.Application.Handlers.Addresses
 {
   internal class AddCustomerAddressHandler : IRequestHandler<AddCustomerAddressCommand, CustomerAddress>
   {
     private readonly ICustomerRepository _customerRepository;
+    private readonly IMapper _mapper;
     
-    public AddCustomerAddressHandler(ICustomerRepository customerRepository)
+    public AddCustomerAddressHandler(ICustomerRepository customerRepository, IMapper mapper)
     {
       _customerRepository = customerRepository ?? throw new ArgumentNullException(nameof(customerRepository));
+      _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
     
     public async Task<CustomerAddress> Handle(AddCustomerAddressCommand request, CancellationToken cancellationToken)
@@ -19,17 +22,8 @@ namespace ECommerce.Application.Handlers.Addresses
       var customer = await _customerRepository.GetCustomerByIdAsync(request.CustomerId, cancellationToken) 
         ?? throw new ArgumentException($"Customer with ID {request.CustomerId} not found.");
       
-      var address = new CustomerAddress
-      {
-        Id = Guid.NewGuid(),
-        CustomerId = request.CustomerId,
-        Street = request.Street,
-        City = request.City,
-        State = request.State,
-        PostalCode = request.PostalCode,
-        Country = request.Country,
-        IsPrimary = request.IsPrimary
-      };
+      var address = _mapper.Map<CustomerAddress>(request);
+      address.Id = Guid.NewGuid();
       
       if (request.IsPrimary)
       {

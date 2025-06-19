@@ -1,8 +1,6 @@
 ﻿using ECommerce.Application.Handlers.Products;
-using ECommerce.Application.Handlers.Users;
-using ECommerce.Application.Handlers.Orders;
-using ECommerce.Application.Services;
 using ECommerce.Application.Interfaces;
+using ECommerce.Application.Services;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 

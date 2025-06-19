@@ -2,16 +2,19 @@ using ECommerce.Application.Requests.Commands.Addresses;
 using ECommerce.Domain.Abstractions;
 using ECommerce.Domain.Models;
 using MediatR;
+using AutoMapper;
 
 namespace ECommerce.Application.Handlers.Addresses
 {
   internal class UpdateCustomerAddressHandler : IRequestHandler<UpdateCustomerAddressCommand, CustomerAddress>
   {
     private readonly ICustomerRepository _customerRepository;
+    private readonly IMapper _mapper;
     
-    public UpdateCustomerAddressHandler(ICustomerRepository customerRepository)
+    public UpdateCustomerAddressHandler(ICustomerRepository customerRepository, IMapper mapper)
     {
       _customerRepository = customerRepository ?? throw new ArgumentNullException(nameof(customerRepository));
+      _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
     
     public async Task<CustomerAddress> Handle(UpdateCustomerAddressCommand request, CancellationToken cancellationToken)
@@ -24,12 +27,7 @@ namespace ECommerce.Application.Handlers.Addresses
         throw new ArgumentException($"Address with ID {request.AddressId} not found.");
       }
       
-      // Update address properties
-      addressToUpdate.Street = request.Street ?? addressToUpdate.Street;
-      addressToUpdate.City = request.City ?? addressToUpdate.City;
-      addressToUpdate.State = request.State ?? addressToUpdate.State;
-      addressToUpdate.PostalCode = request.PostalCode ?? addressToUpdate.PostalCode;
-      addressToUpdate.Country = request.Country;
+      _mapper.Map(request, addressToUpdate);
       
       // Handle primary address logic
       if (request.IsPrimary && !addressToUpdate.IsPrimary)

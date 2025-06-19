@@ -6,6 +6,7 @@ using ECommerce.Domain.Enums;
 using ECommerce.Domain.Models;
 using ECommerce.Domain.Models.Orders;
 using MediatR;
+using AutoMapper;
 
 namespace ECommerce.Application.Handlers.Orders
 {
@@ -15,17 +16,20 @@ namespace ECommerce.Application.Handlers.Orders
     private readonly IProductRepository _productRepository;
     private readonly ICustomerRepository _customerRepository;
     private readonly IOrderService _orderService;
+    private readonly IMapper _mapper;
     
     public CreateOrderHandler(
       IOrderRepository orderRepository,
       IProductRepository productRepository,
       ICustomerRepository customerRepository,
-      IOrderService orderService)
+      IOrderService orderService,
+      IMapper mapper)
     {
       _orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
       _productRepository = productRepository ?? throw new ArgumentNullException(nameof(productRepository));
       _customerRepository = customerRepository ?? throw new ArgumentNullException(nameof(customerRepository));
       _orderService = orderService ?? throw new ArgumentNullException(nameof(orderService));
+      _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
     
     public async Task<Guid> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
@@ -49,18 +53,17 @@ namespace ECommerce.Application.Handlers.Orders
           throw new ArgumentException($"Product with ID {item.ProductId} not found.");
         }
 
-        orderItems.Add(new OrderItem
-        {
-          ProductId = item.ProductId,
-          Quantity = item.Quantity,
-          UnitPrice = product.Price,
-          TotalPrice = product.Price * item.Quantity
-        });
-
-        totalAmount += product.Price * item.Quantity;
+        var orderItem = _mapper.Map<OrderItem>(item);
+        orderItem.UnitPrice = product.Price;
+        orderItem.TotalPrice = product.Price * item.Quantity;
+        orderItems.Add(orderItem);
+        totalAmount += orderItem.TotalPrice;
       }
 
-      // Create order with proper address mapping
+      // Use AutoMapper for address mapping
+      var shippingAddress = MapShippingAddress(request.ShippingAddress, request.CustomerId);
+      var billingAddress = MapBillingAddress(request.BillingAddress, request.CustomerId);
+
       var order = new Order
       {
         CustomerId = request.CustomerId,
@@ -68,8 +71,8 @@ namespace ECommerce.Application.Handlers.Orders
         Status = OrderStatus.Pending,
         TotalAmount = totalAmount,
         Items = orderItems,
-        ShippingAddress = MapShippingAddress(request.ShippingAddress, request.CustomerId),
-        BillingAddress = MapBillingAddress(request.BillingAddress, request.CustomerId)
+        ShippingAddress = shippingAddress,
+        BillingAddress = billingAddress
       };
 
       // Use order service for complex business logic
@@ -84,9 +87,9 @@ namespace ECommerce.Application.Handlers.Orders
 
       Address address = command switch
       {
-        CustomerShippingAddressCommand customerCommand => MapToCustomerAddress(customerCommand.Address, customerId),
-        DeliveryPointShippingAddressCommand deliveryCommand => MapToDeliveryPointAddress(deliveryCommand.Address),
-        LockerShippingAddressCommand lockerCommand => MapToLockerAddress(lockerCommand.Address),
+        CustomerShippingAddressCommand customerCommand => _mapper.Map<CustomerAddress>(customerCommand.Address),
+        DeliveryPointShippingAddressCommand deliveryCommand => _mapper.Map<DeliveryPointAddress>(deliveryCommand.Address),
+        LockerShippingAddressCommand lockerCommand => _mapper.Map<LockerAddress>(lockerCommand.Address),
         _ => throw new ArgumentException($"Unsupported address type: {command.GetType().Name}")
       };
 
@@ -98,51 +101,6 @@ namespace ECommerce.Application.Handlers.Orders
       };
     }
 
-    private CustomerAddress MapToCustomerAddress(CustomerAddressCommand command, Guid customerId)
-    {
-      return new CustomerAddress
-      {
-        Id = Guid.NewGuid(),
-        CustomerId = customerId,
-        Street = command.Street,
-        City = command.City,
-        State = command.State,
-        PostalCode = command.PostalCode,
-        Country = command.Country,
-        IsPrimary = command.IsPrimary
-      };
-    }
-
-    private DeliveryPointAddress MapToDeliveryPointAddress(DeliveryPointAddressCommand command)
-    {
-      return new DeliveryPointAddress
-      {
-        Id = Guid.NewGuid(),
-        Street = command.Street,
-        City = command.City,
-        State = command.State,
-        PostalCode = command.PostalCode,
-        Country = command.Country,
-        ShopName = command.ShopName,
-        ContactNumber = command.ContactNumber
-      };
-    }
-
-    private LockerAddress MapToLockerAddress(LockerAddressCommand command)
-    {
-      return new LockerAddress
-      {
-        Id = Guid.NewGuid(),
-        Street = command.Street,
-        City = command.City,
-        State = command.State,
-        PostalCode = command.PostalCode,
-        Country = command.Country,
-        LockerId = command.LockerId,
-        Provider = command.Provider
-      };
-    }
-
     private OrderBillingAddress? MapBillingAddress(OrderBillingAddressCommand? command, Guid customerId)
     {
       if (command == null) return null;
@@ -150,17 +108,7 @@ namespace ECommerce.Application.Handlers.Orders
       return new OrderBillingAddress
       {
         Id = Guid.NewGuid(),
-        CustomerAddress = new CustomerAddress
-        {
-          Id = Guid.NewGuid(),
-          CustomerId = customerId,
-          Street = command.CustomerAddress.Street,
-          City = command.CustomerAddress.City,
-          State = command.CustomerAddress.State,
-          PostalCode = command.CustomerAddress.PostalCode,
-          Country = command.CustomerAddress.Country,
-          IsPrimary = command.CustomerAddress.IsPrimary
-        }
+        CustomerAddress = _mapper.Map<CustomerAddress>(command.CustomerAddress)
       };
     }
   }

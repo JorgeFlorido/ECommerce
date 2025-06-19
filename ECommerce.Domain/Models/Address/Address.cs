@@ -8,7 +8,7 @@ namespace ECommerce.Domain.Models
     public string? Street { get; set; }
     public string? City { get; set; }
     public string? State { get; set; }
-    public string? PostalCode { get; set; }
+    public PostalCode? PostalCode { get; set; }
     public Country Country { get; set; }
   }
 }

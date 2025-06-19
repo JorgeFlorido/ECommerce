@@ -1,4 +1,6 @@
-﻿public class ExceptionMiddleware
+﻿using ECommerce.Domain.Common.Exceptions;
+
+public class ExceptionMiddleware
 {
   private readonly RequestDelegate _next;
   private readonly ILogger<ExceptionMiddleware> _logger;
@@ -27,6 +29,14 @@
         KeyNotFoundException => StatusCodes.Status404NotFound,
         ArgumentException => StatusCodes.Status400BadRequest,
         UnauthorizedAccessException => StatusCodes.Status403Forbidden,
+        ValidationException => StatusCodes.Status400BadRequest,
+        InvalidAddressException => StatusCodes.Status400BadRequest,
+        ProductException => StatusCodes.Status400BadRequest,
+        PaymentException => StatusCodes.Status402PaymentRequired,
+        CustomerException => StatusCodes.Status400BadRequest,
+        InventoryException => StatusCodes.Status409Conflict,
+        OrderException => StatusCodes.Status400BadRequest,
+        DomainException => StatusCodes.Status400BadRequest,
         _ => StatusCodes.Status500InternalServerError
       };
 

@@ -2,16 +2,19 @@ using ECommerce.Application.Requests.Commands.Users;
 using ECommerce.Domain.Abstractions;
 using ECommerce.Domain.Models.User;
 using MediatR;
+using AutoMapper;
 
 namespace ECommerce.Application.Handlers.Users
 {
   internal class UpdateUserHandler : IRequestHandler<UpdateUserCommand, Customer>
   {
     private readonly ICustomerRepository _customerRepository;
+    private readonly IMapper _mapper;
     
-    public UpdateUserHandler(ICustomerRepository customerRepository)
+    public UpdateUserHandler(ICustomerRepository customerRepository, IMapper mapper)
     {
       _customerRepository = customerRepository ?? throw new ArgumentNullException(nameof(customerRepository));
+      _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
     
     public async Task<Customer> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
@@ -22,10 +25,7 @@ namespace ECommerce.Application.Handlers.Users
         throw new ArgumentException($"Customer with ID {request.UserId} not found.");
       }
       
-      existingCustomer.Email = request.Email ?? existingCustomer.Email;
-      existingCustomer.Name = request.Name ?? existingCustomer.Name;
-      existingCustomer.Surname = request.Surname ?? existingCustomer.Surname;
-      existingCustomer.PhoneNumber = request.PhoneNumber ?? existingCustomer.PhoneNumber;
+      _mapper.Map(request, existingCustomer);
       
       await _customerRepository.UpdateCustomerAsync(existingCustomer, cancellationToken);
       return existingCustomer;
