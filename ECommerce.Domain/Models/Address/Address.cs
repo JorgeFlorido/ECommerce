@@ -1,4 +1,6 @@
-﻿namespace ECommerce.Domain.Models
+﻿using ECommerce.Domain.Enums;
+
+namespace ECommerce.Domain.Models
 {
   public abstract class Address
   {
@@ -7,6 +9,6 @@
     public string? City { get; set; }
     public string? State { get; set; }
     public string? PostalCode { get; set; }
-    public string? Country { get; set; }
+    public Country Country { get; set; }
   }
 }

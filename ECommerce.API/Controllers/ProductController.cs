@@ -49,5 +49,14 @@ namespace ECommerce.API.Controllers
       await _mediator.Send(deleteProductCommand);
       return NoContent();
     }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateProduct(Guid id, [FromBody] UpdateProductRequest productRequest)
+    {
+      var updateProductCommand = _mapper.Map<UpdateProductCommand>(productRequest);
+      updateProductCommand.ProductId = id;
+      var result = await _mediator.Send(updateProductCommand);
+      return Ok(result);
+    }
   }
 }

@@ -34,9 +34,6 @@ namespace ECommerce.Database.Migrations
                     b.Property<string>("Country")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("CustomerId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("PostalCode")
                         .HasColumnType("nvarchar(max)");
 
@@ -47,8 +44,6 @@ namespace ECommerce.Database.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
 
                     b.ToTable("Address");
 
@@ -91,10 +86,48 @@ namespace ECommerce.Database.Migrations
                     b.ToTable("CartItem");
                 });
 
+            modelBuilder.Entity("ECommerce.Domain.Models.OrderBillingAddress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CustomerAddressId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerAddressId");
+
+                    b.ToTable("OrderBillingAddress");
+                });
+
+            modelBuilder.Entity("ECommerce.Domain.Models.OrderShippingAddress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AddressId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AddressId");
+
+                    b.ToTable("OrderShippingAddress");
+                });
+
             modelBuilder.Entity("ECommerce.Domain.Models.Orders.Order", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("BillingAddressId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CustomerId")
@@ -103,6 +136,9 @@ namespace ECommerce.Database.Migrations
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid?>("ShippingAddressId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -110,6 +146,10 @@ namespace ECommerce.Database.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BillingAddressId");
+
+                    b.HasIndex("ShippingAddressId");
 
                     b.ToTable("Orders");
                 });
@@ -130,6 +170,9 @@ namespace ECommerce.Database.Migrations
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("TotalPrice")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("UnitPrice")
                         .HasColumnType("decimal(18,2)");
@@ -224,8 +267,13 @@ namespace ECommerce.Database.Migrations
                 {
                     b.HasBaseType("ECommerce.Domain.Models.Address");
 
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("IsPrimary")
                         .HasColumnType("bit");
+
+                    b.HasIndex("CustomerId");
 
                     b.ToTable("CustomerAddresses", (string)null);
                 });
@@ -256,18 +304,48 @@ namespace ECommerce.Database.Migrations
                     b.ToTable("LockerAddresses", (string)null);
                 });
 
-            modelBuilder.Entity("ECommerce.Domain.Models.Address", b =>
-                {
-                    b.HasOne("ECommerce.Domain.Models.User.Customer", null)
-                        .WithMany("Addresses")
-                        .HasForeignKey("CustomerId");
-                });
-
             modelBuilder.Entity("ECommerce.Domain.Models.CartItem", b =>
                 {
                     b.HasOne("ECommerce.Domain.Models.Cart", null)
                         .WithMany("Items")
                         .HasForeignKey("CartId");
+                });
+
+            modelBuilder.Entity("ECommerce.Domain.Models.OrderBillingAddress", b =>
+                {
+                    b.HasOne("ECommerce.Domain.Models.CustomerAddress", "CustomerAddress")
+                        .WithMany()
+                        .HasForeignKey("CustomerAddressId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CustomerAddress");
+                });
+
+            modelBuilder.Entity("ECommerce.Domain.Models.OrderShippingAddress", b =>
+                {
+                    b.HasOne("ECommerce.Domain.Models.Address", "Address")
+                        .WithMany()
+                        .HasForeignKey("AddressId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Address");
+                });
+
+            modelBuilder.Entity("ECommerce.Domain.Models.Orders.Order", b =>
+                {
+                    b.HasOne("ECommerce.Domain.Models.OrderBillingAddress", "BillingAddress")
+                        .WithMany()
+                        .HasForeignKey("BillingAddressId");
+
+                    b.HasOne("ECommerce.Domain.Models.OrderShippingAddress", "ShippingAddress")
+                        .WithMany()
+                        .HasForeignKey("ShippingAddressId");
+
+                    b.Navigation("BillingAddress");
+
+                    b.Navigation("ShippingAddress");
                 });
 
             modelBuilder.Entity("ECommerce.Domain.Models.Orders.OrderItem", b =>
@@ -290,6 +368,12 @@ namespace ECommerce.Database.Migrations
 
             modelBuilder.Entity("ECommerce.Domain.Models.CustomerAddress", b =>
                 {
+                    b.HasOne("ECommerce.Domain.Models.User.Customer", null)
+                        .WithMany("Addresses")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("ECommerce.Domain.Models.Address", null)
                         .WithOne()
                         .HasForeignKey("ECommerce.Domain.Models.CustomerAddress", "Id")

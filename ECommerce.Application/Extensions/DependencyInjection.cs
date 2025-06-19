@@ -1,4 +1,8 @@
 ﻿using ECommerce.Application.Handlers.Products;
+using ECommerce.Application.Handlers.Users;
+using ECommerce.Application.Handlers.Orders;
+using ECommerce.Application.Services;
+using ECommerce.Application.Interfaces;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,6 +14,9 @@ namespace ECommerce.Application.Extensions
     {
       services.AddMediatR(cfg =>
           cfg.RegisterServicesFromAssemblies(typeof(AddProductHandler).Assembly));
+      
+      services.AddScoped<IOrderService, OrderService>();
+      
       return services;
     }
   }

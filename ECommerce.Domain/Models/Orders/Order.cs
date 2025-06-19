@@ -1,4 +1,5 @@
 ﻿using ECommerce.Domain.Enums;
+using ECommerce.Domain.Models;
 
 namespace ECommerce.Domain.Models.Orders
 {
@@ -11,5 +12,7 @@ namespace ECommerce.Domain.Models.Orders
     public decimal TotalAmount { get; set; }
     public List<OrderItem> Items { get; set; } = [];
     public Payment? Payment { get; set; }
+    public OrderShippingAddress? ShippingAddress { get; set; }
+    public OrderBillingAddress? BillingAddress { get; set; }
   }
 }
