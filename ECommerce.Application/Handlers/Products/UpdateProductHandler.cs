@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using ECommerce.Application.Requests.Commands.Products;
 using ECommerce.Domain.Abstractions;
-using ECommerce.Domain.Models;
+using ECommerce.Domain.Models.Product;
 using MediatR;
 
 namespace ECommerce.Application.Handlers.Products

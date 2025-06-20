@@ -1,6 +1,6 @@
 ﻿using ECommerce.Database;
 using ECommerce.Domain.Abstractions;
-using ECommerce.Domain.Models;
+using ECommerce.Domain.Models.Product;
 using Microsoft.EntityFrameworkCore;
 
 namespace ECommerce.Infrastructure.Repositories

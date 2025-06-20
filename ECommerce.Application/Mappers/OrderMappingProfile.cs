@@ -1,8 +1,8 @@
 using AutoMapper;
 using ECommerce.Application.Requests.Commands.Orders;
 using ECommerce.Application.Requests.Commands.Addresses;
-using ECommerce.Domain.Models.Orders;
 using ECommerce.Domain.Models;
+using ECommerce.Domain.Models.Order;
 
 namespace ECommerce.Application.Mappers
 {

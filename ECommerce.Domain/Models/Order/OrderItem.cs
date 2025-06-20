@@ -1,4 +1,4 @@
-﻿namespace ECommerce.Domain.Models.Orders
+﻿namespace ECommerce.Domain.Models.Order
 {
   public class OrderItem
   {

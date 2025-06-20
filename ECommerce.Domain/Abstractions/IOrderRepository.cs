@@ -1,5 +1,5 @@
 ﻿using ECommerce.Domain.Enums;
-using ECommerce.Domain.Models.Orders;
+using ECommerce.Domain.Models.Order;
 
 namespace ECommerce.Domain.Abstractions
 {

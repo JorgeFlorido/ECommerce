@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using ECommerce.Application.Requests.Commands.Products;
-using ECommerce.Domain.Models;
+using ECommerce.Domain.Models.Product;
 
 namespace ECommerce.Application.Mappers
 {

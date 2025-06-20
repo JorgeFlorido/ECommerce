@@ -1,6 +1,6 @@
 using ECommerce.Application.Requests.Queries.Orders;
 using ECommerce.Domain.Abstractions;
-using ECommerce.Domain.Models.Orders;
+using ECommerce.Domain.Models.Order;
 using MediatR;
 
 namespace ECommerce.Application.Handlers.Orders

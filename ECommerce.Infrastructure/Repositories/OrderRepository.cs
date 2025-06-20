@@ -1,7 +1,7 @@
 ﻿using ECommerce.Database;
 using ECommerce.Domain.Abstractions;
 using ECommerce.Domain.Enums;
-using ECommerce.Domain.Models.Orders;
+using ECommerce.Domain.Models.Order;
 using Microsoft.EntityFrameworkCore;
 
 namespace ECommerce.Infrastructure.Repositories

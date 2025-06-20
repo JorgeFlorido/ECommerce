@@ -4,9 +4,9 @@ using ECommerce.Application.Requests.Commands.Addresses;
 using ECommerce.Domain.Abstractions;
 using ECommerce.Domain.Enums;
 using ECommerce.Domain.Models;
-using ECommerce.Domain.Models.Orders;
 using MediatR;
 using ECommerce.Application.Models;
+using ECommerce.Domain.Models.Order;
 
 namespace ECommerce.Application.Handlers.Orders
 {

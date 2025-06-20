@@ -1,4 +1,4 @@
-using ECommerce.Domain.Models.Orders;
+using ECommerce.Domain.Models.Order;
 using MediatR;
 
 namespace ECommerce.Application.Requests.Queries.Orders

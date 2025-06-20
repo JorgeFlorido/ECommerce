@@ -2,7 +2,7 @@
 
 namespace ECommerce.Application.Interfaces
 {
-  internal interface ITaxService
+  public interface ITaxService
   {
     Task<decimal> CalculateTaxAsync(decimal amount, CancellationToken cancellationToken = default);
 

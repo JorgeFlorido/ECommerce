@@ -1,4 +1,4 @@
-﻿namespace ECommerce.Domain.Models
+﻿namespace ECommerce.Domain.Models.Product
 {
   public class Product
   {
@@ -9,5 +9,10 @@
     public int StockQuantity { get; set; }
     public string? ImageUrl { get; set; }
     public Guid CategoryId { get; set; }
+    public Category Category { get; set; } = null!;
+    public Guid BrandId { get; set; }
+    public Brand Brand { get; set; } = null!;
+    public Guid? ProductTypeId { get; set; }
+    public ProductType? ProductType { get; set; }
   }
 }

@@ -1,5 +1,5 @@
 ﻿using ECommerce.Domain.Models;
-using ECommerce.Domain.Models.Orders;
+using ECommerce.Domain.Models.Order;
 
 namespace ECommerce.API.Models.Requests.Order
 {

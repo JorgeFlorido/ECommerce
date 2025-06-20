@@ -1,7 +1,7 @@
 using ECommerce.Application.Models;
 using ECommerce.Application.Requests.Queries.Orders;
 using ECommerce.Domain.Enums;
-using ECommerce.Domain.Models.Orders;
+using ECommerce.Domain.Models.Order;
 
 namespace ECommerce.Application.Interfaces
 {

@@ -1,6 +1,6 @@
 ﻿using ECommerce.Application.Models;
 using ECommerce.Domain.Models;
-using ECommerce.Domain.Models.Orders;
+using ECommerce.Domain.Models.Order;
 using MediatR;
 
 namespace ECommerce.Application.Requests.Queries.Orders

@@ -1,69 +1,36 @@
 using ECommerce.Application.Interfaces;
-using ECommerce.Domain.Abstractions;
-using ECommerce.Domain.Enums;
-using ECommerce.Domain.Models.Orders;
 using ECommerce.Application.Models;
 using ECommerce.Application.Requests.Queries.Orders;
-using ECommerce.Domain.Models;
+using ECommerce.Domain.Abstractions;
+using ECommerce.Domain.Enums;
+using ECommerce.Domain.Models.Order;
 
 namespace ECommerce.Application.Services
 {
   internal class OrderService : IOrderService
   {
     private readonly IOrderRepository _orderRepository;
-    private readonly IPaymentService _paymentService;
-    private readonly IInventoryService _inventoryService;
-    private readonly INotificationService _notificationService;
-    private readonly IShippingService _shippingService;
-    private readonly ITaxService _taxService;
-    private readonly IDiscountService _discountService;
+    private readonly ICheckoutProcessor _checkoutProcessor;
+    private readonly IOrderPaymentProcessor _paymentProcessor;
 
     public OrderService(
-      IOrderRepository orderRepository,
-      IPaymentService paymentService,
-      IInventoryService inventoryService,
-      INotificationService notificationService,
-      IShippingService shippingService,
-      ITaxService taxService,
-      IDiscountService discountService)
+        IOrderRepository orderRepository,
+        ICheckoutProcessor checkoutProcessor,
+        IOrderPaymentProcessor paymentProcessor)
     {
       _orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
-      _paymentService = paymentService ?? throw new ArgumentNullException(nameof(paymentService));
-      _inventoryService = inventoryService ?? throw new ArgumentNullException(nameof(inventoryService));
-      _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
-      _shippingService = shippingService ?? throw new ArgumentNullException(nameof(shippingService));
-      _taxService = taxService ?? throw new ArgumentNullException(nameof(taxService));
-      _discountService = discountService ?? throw new ArgumentNullException(nameof(discountService));
+      _checkoutProcessor = checkoutProcessor ?? throw new ArgumentNullException(nameof(checkoutProcessor));
+      _paymentProcessor = paymentProcessor ?? throw new ArgumentNullException(nameof(paymentProcessor));
     }
 
-    public async Task<OrderCostCalculationResult> CalculateOrderCostAsync(OrderCostCalculationQuery orderCostCalculationQuery, CancellationToken cancellationToken = default)
+    public async Task<OrderCostCalculationResult> CalculateOrderCostAsync(OrderCostCalculationQuery query, CancellationToken ct = default)
     {
-      var grossAmount = 0m;
-
-      foreach (var item in orderCostCalculationQuery.Items)
-      {
-        var itemCost = item.TotalPrice;
-        grossAmount += itemCost;
-      }
-
-      var taxRate = await _taxService.GetTaxRateAsync(orderCostCalculationQuery.BillingAddress.CustomerAddress.Country, cancellationToken);
-
-      var shippingCost = await _shippingService.CalculateShippingCostAsync(orderCostCalculationQuery.ShippingAddress, cancellationToken);
-
-      var discount = await _discountService.GetDiscountCodeAsync(orderCostCalculationQuery.DiscountCode, cancellationToken);
-
-      return new OrderCostCalculationResult
-      {
-        GrossAmount = grossAmount,
-        TaxAmount = grossAmount * taxRate / 100,
-        ShippingCost = shippingCost,
-        DiscountCode = discount
-      };
+      return await _checkoutProcessor.CalculateOrderCostAsync(query, ct);
     }
 
-    public async Task<CreateOrderResult> CreateOrderAsync(Order order, CancellationToken cancellationToken = default)
+    public async Task<CreateOrderResult> CreateOrderAsync(Order order, CancellationToken ct = default)
     {
-      var costQuery = new OrderCostCalculationQuery
+      var query = new OrderCostCalculationQuery
       {
         CustomerId = order.CustomerId,
         Items = order.Items,
@@ -72,8 +39,7 @@ namespace ECommerce.Application.Services
         DiscountCode = order.DiscountCode?.Code
       };
 
-      var costResult = await CalculateOrderCostAsync(costQuery, cancellationToken);
-
+      var costResult = await _checkoutProcessor.CalculateOrderCostAsync(query, ct);
 
       order.GrossAmount = costResult.GrossAmount;
       order.TaxAmount = costResult.TaxAmount;
@@ -81,16 +47,8 @@ namespace ECommerce.Application.Services
       order.DiscountCode = costResult.DiscountCode;
       order.OtherFees = costResult.OtherFees;
 
-      var outOfStock = new List<Guid>();
-
-      foreach (var item in order.Items)
-      {
-        var isInStock = await _inventoryService.IsProductInStockAsync(item.Id, item.Quantity, cancellationToken);
-        if (!isInStock)
-          outOfStock.Add(item.Id);
-      }
-
-      if (outOfStock.Count != 0)
+      var outOfStock = await _checkoutProcessor.GetOutOfStockItemsAsync(order.Items, ct);
+      if (outOfStock.Count > 0)
       {
         return new CreateOrderResult
         {
@@ -100,7 +58,7 @@ namespace ECommerce.Application.Services
         };
       }
 
-      await _orderRepository.AddOrderAsync(order, cancellationToken);
+      await _orderRepository.AddOrderAsync(order, ct);
       return new CreateOrderResult
       {
         Success = true,
@@ -108,65 +66,44 @@ namespace ECommerce.Application.Services
       };
     }
 
-    public async Task<bool> ProcessOrderAsync(Guid orderId, CancellationToken cancellationToken = default)
+    public async Task<bool> ProcessOrderAsync(Guid orderId, CancellationToken ct = default)
     {
-      // TODO: Implement complex business logic
-      // - Process payment
-      // - Update inventory
-      // - Generate shipping label
-      // - Send order confirmation
-      // - Update order status
-      // - Notify warehouse
-      // - Log all operations
-
-      var order = await _orderRepository.GetOrderByIdAsync(orderId, cancellationToken);
+      var order = await _orderRepository.GetOrderByIdAsync(orderId, ct);
       if (order == null) return false;
 
-      // Placeholder for complex logic
+      var paymentSuccess = await _paymentProcessor.ProcessPaymentAsync(order, ct);
+      if (!paymentSuccess) return false;
+
       order.Status = OrderStatus.Processing;
-      await _orderRepository.UpdateOrderAsync(order, cancellationToken);
-
+      await _orderRepository.UpdateOrderAsync(order, ct);
       return true;
     }
 
-    public async Task<bool> CancelOrderAsync(Guid orderId, string? reason, bool refundPayment, CancellationToken cancellationToken = default)
+    public async Task<bool> CancelOrderAsync(Guid orderId, string? reason, bool refundPayment, CancellationToken ct = default)
     {
-      // TODO: Implement complex business logic
-      // - Validate order can be cancelled
-      // - Process refund if needed
-      // - Restore inventory
-      // - Cancel shipping if applicable
-      // - Send cancellation notification
-      // - Update order status
-      // - Log cancellation reason
-
-      var order = await _orderRepository.GetOrderByIdAsync(orderId, cancellationToken);
+      var order = await _orderRepository.GetOrderByIdAsync(orderId, ct);
       if (order == null) return false;
 
-      // Placeholder for complex logic
+      if (refundPayment)
+      {
+        var refundSuccess = await _paymentProcessor.RefundPaymentAsync(order, ct);
+        if (!refundSuccess) return false;
+      }
+
       order.Status = OrderStatus.Canceled;
-      await _orderRepository.UpdateOrderAsync(order, cancellationToken);
-
+      await _orderRepository.UpdateOrderAsync(order, ct);
       return true;
     }
 
-    public async Task<bool> UpdateOrderStatusAsync(Guid orderId, OrderStatus status, string? notes, CancellationToken cancellationToken = default)
+    public async Task<bool> UpdateOrderStatusAsync(Guid orderId, OrderStatus status, string? notes, CancellationToken ct = default)
     {
-      // TODO: Implement complex business logic
-      // - Validate status transition
-      // - Send status update notifications
-      // - Trigger status-specific actions
-      // - Log status change with notes
-      // - Update related systems
-
-      var order = await _orderRepository.GetOrderByIdAsync(orderId, cancellationToken);
+      var order = await _orderRepository.GetOrderByIdAsync(orderId, ct);
       if (order == null) return false;
 
-      // Placeholder for complex logic
       order.Status = status;
-      await _orderRepository.UpdateOrderAsync(order, cancellationToken);
-
+      await _orderRepository.UpdateOrderAsync(order, ct);
       return true;
     }
   }
-} 
+
+}
