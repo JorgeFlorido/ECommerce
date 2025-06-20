@@ -10,6 +10,7 @@ namespace ECommerce.Application.Requests.Commands.Orders
     public List<OrderItemCommand> Items { get; set; } = [];
     public OrderShippingAddressCommand? ShippingAddress { get; set; }
     public OrderBillingAddressCommand? BillingAddress { get; set; }
+    public string? DiscountCode { get; set; } = null;
   }
 
   public class OrderItemCommand

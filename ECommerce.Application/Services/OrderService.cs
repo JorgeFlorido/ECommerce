@@ -4,6 +4,7 @@ using ECommerce.Domain.Enums;
 using ECommerce.Domain.Models.Orders;
 using ECommerce.Application.Models;
 using ECommerce.Application.Requests.Queries.Orders;
+using ECommerce.Domain.Models;
 
 namespace ECommerce.Application.Services
 {
@@ -56,12 +57,30 @@ namespace ECommerce.Application.Services
         GrossAmount = grossAmount,
         TaxAmount = grossAmount * taxRate / 100,
         ShippingCost = shippingCost,
-        DiscountAmount = discount?.Amount ?? 0m,
+        DiscountCode = discount
       };
     }
 
     public async Task<CreateOrderResult> CreateOrderAsync(Order order, CancellationToken cancellationToken = default)
     {
+      var costQuery = new OrderCostCalculationQuery
+      {
+        CustomerId = order.CustomerId,
+        Items = order.Items,
+        ShippingAddress = order.ShippingAddress,
+        BillingAddress = order.BillingAddress,
+        DiscountCode = order.DiscountCode?.Code
+      };
+
+      var costResult = await CalculateOrderCostAsync(costQuery, cancellationToken);
+
+
+      order.GrossAmount = costResult.GrossAmount;
+      order.TaxAmount = costResult.TaxAmount;
+      order.ShippingCost = costResult.ShippingCost;
+      order.DiscountCode = costResult.DiscountCode;
+      order.OtherFees = costResult.OtherFees;
+
       var outOfStock = new List<Guid>();
 
       foreach (var item in order.Items)

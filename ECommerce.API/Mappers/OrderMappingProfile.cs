@@ -13,7 +13,8 @@ namespace ECommerce.API.Mappers
       CreateMap<OrderCostCalculationRequest, OrderCostCalculationQuery>();
       CreateMap<OrderCostCalculationResult, OrderCostCalculationResponse>()
         .ForMember(dest => dest.NetAmount, opt => opt.MapFrom(src => src.TotalAmount))
-        .ForMember(dest => dest.TotalAmount, opt => opt.MapFrom(src => src.TotalAmount));
+        .ForMember(dest => dest.TotalAmount, opt => opt.MapFrom(src => src.TotalAmount))
+        .ForMember(dest => dest.DiscountAmount, opt => opt.MapFrom(src => src.DiscountCode.Amount));
     }
   }
 } 
