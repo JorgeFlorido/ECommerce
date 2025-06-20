@@ -2,6 +2,7 @@ using AutoMapper;
 using ECommerce.API.Models.Requests.Order;
 using ECommerce.Application.Requests.Commands.Orders;
 using ECommerce.Application.Requests.Queries.Orders;
+using ECommerce.API.Models.Responses.Order;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -73,6 +74,15 @@ namespace ECommerce.API.Controllers
       updateStatusCommand.OrderId = id;
       var result = await _mediator.Send(updateStatusCommand);
       return Ok(result);
+    }
+
+    [HttpPost("calculate-cost")]
+    public async Task<IActionResult> CalculateOrderCost([FromBody] OrderCostCalculationRequest request)
+    {
+      var query = _mapper.Map<OrderCostCalculationQuery>(request);
+      var result = await _mediator.Send(query);
+      var response = _mapper.Map<OrderCostCalculationResponse>(result);
+      return Ok(response);
     }
   }
 } 

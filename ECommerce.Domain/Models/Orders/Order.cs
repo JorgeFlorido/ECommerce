@@ -1,5 +1,4 @@
 ﻿using ECommerce.Domain.Enums;
-using ECommerce.Domain.Models;
 
 namespace ECommerce.Domain.Models.Orders
 {
@@ -9,7 +8,12 @@ namespace ECommerce.Domain.Models.Orders
     public Guid CustomerId { get; set; }
     public DateTime OrderDate { get; set; }
     public OrderStatus Status { get; set; }
-    public decimal TotalAmount { get; set; }
+    public decimal GrossAmount { get; set; }
+    public decimal ShippingCost { get; set; } = 0.0m;
+    public decimal TaxAmount { get; set; } = 0.0m;
+    public decimal DiscountAmount { get; set; } = 0.0m;
+    public decimal OtherFees { get; set; } = 0.0m;
+    public decimal TotalAmount => GrossAmount + ShippingCost + TaxAmount + OtherFees - DiscountAmount;
     public List<OrderItem> Items { get; set; } = [];
     public Payment? Payment { get; set; }
     public OrderShippingAddress? ShippingAddress { get; set; }

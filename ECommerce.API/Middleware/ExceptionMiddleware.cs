@@ -19,7 +19,6 @@ public class ExceptionMiddleware
     }
     catch (Exception ex)
     {
-      // Fix for CA2254: Use a constant message template and pass exception details as parameters
       const string logMessageTemplate = "Unhandled exception occurred: {ExceptionMessage}";
       _logger.LogError(logMessageTemplate, ex.Message);
 

@@ -9,10 +9,4 @@ namespace ECommerce.API.Models.Requests.Order
     public OrderShippingAddressRequest? ShippingAddress { get; set; }
     public OrderBillingAddressRequest? BillingAddress { get; set; }
   }
-
-  public class OrderItemRequest
-  {
-    public Guid ProductId { get; set; }
-    public int Quantity { get; set; }
-  }
 } 

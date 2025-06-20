@@ -20,7 +20,6 @@ namespace ECommerce.API.Controllers
       _mapper = mapper;
     }
 
-    // Customer Address Management
     [HttpGet("customer/{customerId}")]
     public async Task<IActionResult> GetCustomerAddresses(Guid customerId)
     {

@@ -1,9 +1,10 @@
+using ECommerce.Application.Models;
 using ECommerce.Application.Requests.Commands.Addresses;
 using MediatR;
 
 namespace ECommerce.Application.Requests.Commands.Orders
 {
-  public class CreateOrderCommand : IRequest<Guid>
+  public class CreateOrderCommand : IRequest<CreateOrderResult>
   {
     public Guid CustomerId { get; set; }
     public List<OrderItemCommand> Items { get; set; } = [];
