@@ -38,7 +38,6 @@ namespace ECommerce.Application.Handlers.Orders
       }
 
       var orderItems = new List<OrderItem>();
-      decimal totalAmount = 0;
 
       foreach (var item in request.Items)
       {
@@ -54,8 +53,6 @@ namespace ECommerce.Application.Handlers.Orders
           Quantity = item.Quantity,
           UnitPrice = product.Price
         });
-
-        totalAmount += product.Price * item.Quantity;
       }
 
       var order = new Order
@@ -65,7 +62,8 @@ namespace ECommerce.Application.Handlers.Orders
         Status = OrderStatus.Pending,
         Items = orderItems,
         ShippingAddress = MapShippingAddress(request.ShippingAddress, request.CustomerId),
-        BillingAddress = MapBillingAddress(request.BillingAddress, request.CustomerId)
+        BillingAddress = MapBillingAddress(request.BillingAddress, request.CustomerId),
+        DiscountCode = null // The service will retrieve and set the DiscountCode entity
       };
 
       var orderResult = await _orderService.CreateOrderAsync(order, cancellationToken);

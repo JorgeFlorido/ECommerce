@@ -18,5 +18,6 @@ namespace ECommerce.Domain.Models.Orders
     public Payment? Payment { get; set; }
     public OrderShippingAddress? ShippingAddress { get; set; }
     public OrderBillingAddress? BillingAddress { get; set; }
+    public DiscountCode? DiscountCode { get; set; } 
   }
 }
