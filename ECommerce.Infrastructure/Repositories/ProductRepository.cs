@@ -1,7 +1,12 @@
 ﻿using ECommerce.Database;
 using ECommerce.Domain.Abstractions;
+using ECommerce.Domain.Common.Models;
+using ECommerce.Domain.Models;
 using ECommerce.Domain.Models.Product;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ECommerce.Infrastructure.Repositories
 {
@@ -27,11 +32,53 @@ namespace ECommerce.Infrastructure.Repositories
         .ExecuteDeleteAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<Product>> GetAllProductsAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedList<Product>> GetAllProductsAsync(ProductFilterQuery filter, PaginationQuery pagination, CancellationToken cancellationToken = default)
     {
-      return await _context.Products
-        .AsNoTracking()
-        .ToListAsync(cancellationToken);
+      IQueryable<Product> query = _context.Products
+          .Include(p => p.Brand)
+          .Include(p => p.Category)
+          .AsNoTracking();
+
+      if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
+      {
+        query = query.Where(p =>
+            (p.Name != null && p.Name.Contains(filter.SearchTerm)) ||
+            (p.Description != null && p.Description.Contains(filter.SearchTerm)));
+      }
+
+      if (filter.Brands != null && filter.Brands.Any())
+      {
+        query = query.Where(p => p.Brand != null && filter.Brands.Contains(p.Brand.Name!));
+      }
+      
+      if (filter.Categories != null && filter.Categories.Any())
+      {
+        query = query.Where(p => p.Category != null && filter.Categories.Contains(p.Category.Name!));
+      }
+
+      if (filter.MinPrice.HasValue)
+      {
+        query = query.Where(p => p.Price >= filter.MinPrice.Value);
+      }
+
+      if (filter.MaxPrice.HasValue)
+      {
+        query = query.Where(p => p.Price <= filter.MaxPrice.Value);
+      }
+
+      if (filter.InStock.HasValue)
+      {
+        query = query.Where(p => p.StockQuantity > 0 == filter.InStock.Value);
+      }
+
+      var totalCount = await query.CountAsync(cancellationToken);
+
+      var items = await query
+          .Skip((pagination.PageNumber - 1) * pagination.PageSize)
+          .Take(pagination.PageSize)
+          .ToListAsync(cancellationToken);
+
+      return new PagedList<Product>(items, totalCount, pagination.PageNumber, pagination.PageSize);
     }
 
     public async Task<Product?> GetProductByIdAsync(Guid productId, CancellationToken cancellationToken = default)

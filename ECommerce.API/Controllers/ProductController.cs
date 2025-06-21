@@ -21,9 +21,30 @@ namespace ECommerce.API.Controllers
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllProducts()
+    public async Task<IActionResult> GetAllProducts([FromQuery] GetAllProductsRequest request)
     {
-      var products = await _mediator.Send(new GetAllProductsQuery());
+      var query = _mapper.Map<GetAllProductsQuery>(request);
+      var products = await _mediator.Send(query);
+      return Ok(products);
+    }
+
+    [HttpGet("brands/{brandName}/products")]
+    public async Task<IActionResult> GetProductsByBrand(string brandName, [FromQuery] GetAllProductsRequest request)
+    {
+      request.Filter.Brands = new List<string> { brandName };
+
+      var query = _mapper.Map<GetAllProductsQuery>(request);
+      var products = await _mediator.Send(query);
+      return Ok(products);
+    }
+
+    [HttpGet("categories/{categoryName}/products")]
+    public async Task<IActionResult> GetProductsByCategory(string categoryName, [FromQuery] GetAllProductsRequest request)
+    {
+      request.Filter.Categories = new List<string> { categoryName };
+
+      var query = _mapper.Map<GetAllProductsQuery>(request);
+      var products = await _mediator.Send(query);
       return Ok(products);
     }
 
