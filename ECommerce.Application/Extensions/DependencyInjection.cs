@@ -14,6 +14,7 @@ namespace ECommerce.Application.Extensions
           cfg.RegisterServicesFromAssemblies(typeof(AddProductHandler).Assembly));
       
       services.AddScoped<IOrderService, OrderService>();
+      services.AddScoped<INotificationService, NotificationService>();
       
       return services;
     }

@@ -2,6 +2,8 @@
 using ECommerce.Domain.Abstractions;
 using ECommerce.Infrastructure.Identity;
 using ECommerce.Infrastructure.Repositories;
+using ECommerce.Application.Interfaces;
+using ECommerce.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +28,13 @@ namespace ECommerce.Infrastructure.Extensions
       services.AddScoped<IProductRepository, ProductRepository>();
       services.AddScoped<IOrderRepository, OrderRepository>();
       services.AddScoped<ICustomerRepository, CustomerRepository>();
+      return services;
+    }
+
+    public static IServiceCollection AddServices(this IServiceCollection services)
+    {
+      services.AddScoped<IEmailService, MailKitEmailService>();
+      services.AddScoped<ISmsService, TwilioSmsService>();
       return services;
     }
   }

@@ -24,12 +24,12 @@ namespace ECommerce.Application.Services
       _inventoryService = inventoryService;
     }
 
-    public async Task<OrderCostCalculationResult> CalculateOrderCostAsync(OrderCostCalculationQuery query, CancellationToken ct)
+    public async Task<OrderCostCalculationResult> CalculateOrderCostAsync(OrderCostCalculationQuery query, CancellationToken cancellationToken)
     {
       var gross = query.Items.Sum(i => i.TotalPrice);
-      var taxRate = await _taxService.GetTaxRateAsync(query.BillingAddress.CustomerAddress.Country, ct);
-      var shipping = await _shippingService.CalculateShippingCostAsync(query.ShippingAddress, ct);
-      var discount = await _discountService.GetDiscountCodeAsync(query.DiscountCode, ct);
+      var taxRate = await _taxService.GetTaxRateAsync(query.BillingAddress.CustomerAddress.Country, cancellationToken);
+      var shipping = await _shippingService.CalculateShippingCostAsync(query.ShippingAddress, cancellationToken);
+      var discount = await _discountService.GetDiscountCodeAsync(query.DiscountCode, cancellationToken);
 
       return new OrderCostCalculationResult
       {
