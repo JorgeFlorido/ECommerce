@@ -7,7 +7,7 @@ using ECommerce.Domain.Models.Order;
 
 namespace ECommerce.Application.Services
 {
-  internal class OrderService : IOrderService
+  public class OrderService : IOrderService
   {
     private readonly IOrderRepository _orderRepository;
     private readonly ICheckoutProcessor _checkoutProcessor;

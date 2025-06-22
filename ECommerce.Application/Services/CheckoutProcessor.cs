@@ -34,7 +34,7 @@ namespace ECommerce.Application.Services
       return new OrderCostCalculationResult
       {
         GrossAmount = gross,
-        TaxAmount = gross * taxRate / 100,
+        TaxAmount = gross * taxRate,
         ShippingCost = shipping,
         DiscountCode = discount
       };
@@ -51,5 +51,4 @@ namespace ECommerce.Application.Services
       return outOfStock;
     }
   }
-
 }
