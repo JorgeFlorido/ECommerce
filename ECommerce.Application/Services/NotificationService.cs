@@ -1,8 +1,5 @@
 using ECommerce.Application.Interfaces;
 using ECommerce.Domain.Abstractions;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System;
 
 namespace ECommerce.Application.Services
 {

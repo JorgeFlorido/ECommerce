@@ -3,14 +3,14 @@ using ECommerce.Domain.Models;
 using ECommerce.Domain.Models.Order;
 using ECommerce.Domain.Models.Product;
 using ECommerce.Domain.Models.User;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
+using ECommerce.Domain.Events;
 
 namespace ECommerce.Database
 {
   public class AppDbContext : DbContext
   {
-    private readonly IPublisher _publisher;
+    private readonly IDomainEventDispatcher _domainEventDispatcher;
     public DbSet<Product> Products { get; set; }
     public DbSet<Customer> Customers { get; set; }
     public DbSet<CustomerAddress> CustomerAddresses { get; set; }
@@ -19,14 +19,14 @@ namespace ECommerce.Database
     public DbSet<Payment> Payments { get; set; }
     public DbSet<Cart> Carts { get; set; }
 
-    public AppDbContext(IPublisher publisher)
+    public AppDbContext(IDomainEventDispatcher domainEventDispatcher)
     {
-      _publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
+      _domainEventDispatcher = domainEventDispatcher ?? throw new ArgumentNullException(nameof(domainEventDispatcher));
     }
 
-    public AppDbContext(DbContextOptions<AppDbContext> options, IPublisher publisher) : base(options)
+    public AppDbContext(DbContextOptions<AppDbContext> options, IDomainEventDispatcher domainEventDispatcher) : base(options)
     {
-      _publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
+      _domainEventDispatcher = domainEventDispatcher ?? throw new ArgumentNullException(nameof(domainEventDispatcher));
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -51,17 +51,19 @@ namespace ECommerce.Database
           .Where(e => e.DomainEvents.Count != 0)
           .ToArray();
 
+      var result = await base.SaveChangesAsync(cancellationToken);
+
       foreach (var entity in entitiesWithEvents)
       {
         var events = entity.DomainEvents.ToArray();
-
+        entity.ClearDomainEvents();
         foreach (var domainEvent in events)
         {
-          await _publisher.Publish(domainEvent, cancellationToken);
+          await _domainEventDispatcher.Dispatch(domainEvent, cancellationToken);
         }
       }
 
-      return await base.SaveChangesAsync(cancellationToken);
+      return result;
     }
   }
 }
