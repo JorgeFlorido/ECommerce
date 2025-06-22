@@ -3,6 +3,7 @@ using ECommerce.Application.Models;
 using ECommerce.Application.Requests.Commands.Orders;
 using ECommerce.Domain.Abstractions;
 using ECommerce.Domain.Enums;
+using ECommerce.Domain.Events;
 using ECommerce.Domain.Models.Order;
 using MediatR;
 
@@ -66,6 +67,8 @@ namespace ECommerce.Application.Handlers.Orders
         BillingAddress = _addressFactory.CreateBillingAddress(request.BillingAddress, request.CustomerId),
         DiscountCode = null 
       };
+
+      order.AddDomainEvent(new OrderCreatedEvent(order.Id, order.CustomerId));
 
       var orderResult = await _orderService.CreateOrderAsync(order, cancellationToken);
       

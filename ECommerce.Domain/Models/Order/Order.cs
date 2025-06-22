@@ -1,8 +1,9 @@
-﻿using ECommerce.Domain.Enums;
+﻿using ECommerce.Domain.Common.Models;
+using ECommerce.Domain.Enums;
 
 namespace ECommerce.Domain.Models.Order
 {
-  public class Order
+  public class Order : Entity
   {
     public Guid Id { get; set; }
     public Guid CustomerId { get; set; }
