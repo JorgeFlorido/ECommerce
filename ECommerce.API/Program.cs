@@ -18,6 +18,7 @@ namespace ECommerce.API
       builder.Services.AddRepositories();
       builder.Services.AddServices();
       builder.Services.AddApplication();
+      builder.Services.AddFactories();
 
       builder.Services.AddValidators();
       builder.Services.AddMappers();

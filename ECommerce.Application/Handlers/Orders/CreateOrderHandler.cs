@@ -1,12 +1,10 @@
 using ECommerce.Application.Interfaces;
+using ECommerce.Application.Models;
 using ECommerce.Application.Requests.Commands.Orders;
-using ECommerce.Application.Requests.Commands.Addresses;
 using ECommerce.Domain.Abstractions;
 using ECommerce.Domain.Enums;
-using ECommerce.Domain.Models;
-using MediatR;
-using ECommerce.Application.Models;
 using ECommerce.Domain.Models.Order;
+using MediatR;
 
 namespace ECommerce.Application.Handlers.Orders
 {
@@ -16,17 +14,20 @@ namespace ECommerce.Application.Handlers.Orders
     private readonly IProductRepository _productRepository;
     private readonly ICustomerRepository _customerRepository;
     private readonly IOrderService _orderService;
-    
+    private readonly IAddressFactory _addressFactory;
+
     public CreateOrderHandler(
       IOrderRepository orderRepository,
       IProductRepository productRepository,
       ICustomerRepository customerRepository,
-      IOrderService orderService)
+      IOrderService orderService, 
+      IAddressFactory addressFactory)
     {
       _orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
       _productRepository = productRepository ?? throw new ArgumentNullException(nameof(productRepository));
       _customerRepository = customerRepository ?? throw new ArgumentNullException(nameof(customerRepository));
       _orderService = orderService ?? throw new ArgumentNullException(nameof(orderService));
+      _addressFactory = addressFactory ?? throw new ArgumentNullException(nameof(addressFactory));
     }
     
     public async Task<CreateOrderResult> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
@@ -61,100 +62,14 @@ namespace ECommerce.Application.Handlers.Orders
         OrderDate = DateTime.UtcNow,
         Status = OrderStatus.Pending,
         Items = orderItems,
-        ShippingAddress = MapShippingAddress(request.ShippingAddress, request.CustomerId),
-        BillingAddress = MapBillingAddress(request.BillingAddress, request.CustomerId),
-        DiscountCode = null // The service will retrieve and set the DiscountCode entity
+        ShippingAddress = _addressFactory.CreateShippingAddress(request.ShippingAddress, request.CustomerId),
+        BillingAddress = _addressFactory.CreateBillingAddress(request.BillingAddress, request.CustomerId),
+        DiscountCode = null 
       };
 
       var orderResult = await _orderService.CreateOrderAsync(order, cancellationToken);
       
       return orderResult;
-    }
-
-    private OrderShippingAddress? MapShippingAddress(OrderShippingAddressCommand? command, Guid customerId)
-    {
-      if (command == null) return null;
-
-      Address address = command switch
-      {
-        CustomerShippingAddressCommand customerCommand => MapToCustomerAddress(customerCommand.Address, customerId),
-        DeliveryPointShippingAddressCommand deliveryCommand => MapToDeliveryPointAddress(deliveryCommand.Address),
-        LockerShippingAddressCommand lockerCommand => MapToLockerAddress(lockerCommand.Address),
-        _ => throw new ArgumentException($"Unsupported address type: {command.GetType().Name}")
-      };
-
-      return new OrderShippingAddress
-      {
-        Id = Guid.NewGuid(),
-        Type = command.Type,
-        Address = address
-      };
-    }
-
-    private CustomerAddress MapToCustomerAddress(CustomerAddressCommand command, Guid customerId)
-    {
-      return new CustomerAddress
-      {
-        Id = Guid.NewGuid(),
-        CustomerId = customerId,
-        Street = command.Street,
-        City = command.City,
-        State = command.State,
-        PostalCode = new PostalCode(command.PostalCode, command.Country),
-        Country = command.Country,
-        IsPrimary = command.IsPrimary
-      };
-    }
-
-    private DeliveryPointAddress MapToDeliveryPointAddress(DeliveryPointAddressCommand command)
-    {
-      return new DeliveryPointAddress
-      {
-        Id = Guid.NewGuid(),
-        Street = command.Street,
-        City = command.City,
-        State = command.State,
-        PostalCode = new PostalCode(command.PostalCode, command.Country),
-        Country = command.Country,
-        ShopName = command.ShopName,
-        ContactNumber = command.ContactNumber
-      };
-    }
-
-    private LockerAddress MapToLockerAddress(LockerAddressCommand command)
-    {
-      return new LockerAddress
-      {
-        Id = Guid.NewGuid(),
-        Street = command.Street,
-        City = command.City,
-        State = command.State,
-        PostalCode = new PostalCode(command.PostalCode, command.Country),
-        Country = command.Country,
-        LockerId = command.LockerId,
-        Provider = command.Provider
-      };
-    }
-
-    private OrderBillingAddress? MapBillingAddress(OrderBillingAddressCommand? command, Guid customerId)
-    {
-      if (command == null) return null;
-
-      return new OrderBillingAddress
-      {
-        Id = Guid.NewGuid(),
-        CustomerAddress = new CustomerAddress
-        {
-          Id = Guid.NewGuid(),
-          CustomerId = customerId,
-          Street = command.CustomerAddress.Street,
-          City = command.CustomerAddress.City,
-          State = command.CustomerAddress.State,
-          PostalCode = new PostalCode(command.CustomerAddress.PostalCode, command.CustomerAddress.Country),
-          Country = command.CustomerAddress.Country,
-          IsPrimary = command.CustomerAddress.IsPrimary
-        }
-      };
     }
   }
 } 

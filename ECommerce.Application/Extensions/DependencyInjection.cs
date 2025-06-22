@@ -1,4 +1,5 @@
-﻿using ECommerce.Application.Handlers.Products;
+﻿using ECommerce.Application.Factories;
+using ECommerce.Application.Handlers.Products;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Services;
 using MediatR;
@@ -12,10 +13,16 @@ namespace ECommerce.Application.Extensions
     {
       services.AddMediatR(cfg =>
           cfg.RegisterServicesFromAssemblies(typeof(AddProductHandler).Assembly));
-      
+
       services.AddScoped<IOrderService, OrderService>();
       services.AddScoped<INotificationService, NotificationService>();
-      
+
+      return services;
+    }
+
+    public static IServiceCollection AddFactories(this IServiceCollection services)
+    {
+      services.AddScoped<IAddressFactory, AddressFactory>();
       return services;
     }
   }
