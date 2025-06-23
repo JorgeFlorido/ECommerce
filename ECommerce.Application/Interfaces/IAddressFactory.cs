@@ -3,7 +3,7 @@ using ECommerce.Domain.Models;
 
 namespace ECommerce.Application.Interfaces
 {
-  internal interface IAddressFactory
+  public interface IAddressFactory
   {
     OrderShippingAddress? CreateShippingAddress(OrderShippingAddressCommand? command, Guid customerId);
     OrderBillingAddress? CreateBillingAddress(OrderBillingAddressCommand? command, Guid customerId);

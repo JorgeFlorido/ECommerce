@@ -9,7 +9,7 @@ using MediatR;
 
 namespace ECommerce.Application.Handlers.Orders
 {
-  internal class CreateOrderHandler : IRequestHandler<CreateOrderCommand, CreateOrderResult>
+  public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, CreateOrderResult>
   {
     private readonly IOrderRepository _orderRepository;
     private readonly IProductRepository _productRepository;
@@ -39,6 +39,21 @@ namespace ECommerce.Application.Handlers.Orders
         throw new ArgumentException($"Customer with ID {request.CustomerId} not found.");
       }
 
+      if (request.Items == null || !request.Items.Any())
+      {
+        throw new ArgumentException("Order must contain at least one product.");
+      }
+
+      if (request.ShippingAddress == null)
+      {
+        throw new ArgumentException("Shipping address is required.");
+      }
+
+      if (request.BillingAddress == null)
+      {
+        throw new ArgumentException("Billing address is required.");
+      }
+
       var orderItems = new List<OrderItem>();
 
       foreach (var item in request.Items)
@@ -65,13 +80,13 @@ namespace ECommerce.Application.Handlers.Orders
         Items = orderItems,
         ShippingAddress = _addressFactory.CreateShippingAddress(request.ShippingAddress, request.CustomerId),
         BillingAddress = _addressFactory.CreateBillingAddress(request.BillingAddress, request.CustomerId),
-        DiscountCode = null 
+        DiscountCode = null
       };
 
       order.AddDomainEvent(new OrderCreatedEvent(order.Id, order.CustomerId));
 
       var orderResult = await _orderService.CreateOrderAsync(order, cancellationToken);
-      
+
       return orderResult;
     }
   }

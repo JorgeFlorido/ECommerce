@@ -1,6 +1,4 @@
-﻿using ECommerce.Domain.Models;
-
-namespace ECommerce.Domain.Models.User
+﻿namespace ECommerce.Domain.Models.User
 {
   public class Customer : BaseUser
   {
