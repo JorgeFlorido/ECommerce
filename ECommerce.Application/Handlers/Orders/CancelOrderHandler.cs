@@ -5,7 +5,7 @@ using MediatR;
 
 namespace ECommerce.Application.Handlers.Orders
 {
-  internal class CancelOrderHandler : IRequestHandler<CancelOrderCommand, bool>
+  public class CancelOrderHandler : IRequestHandler<CancelOrderCommand, bool>
   {
     private readonly IOrderRepository _orderRepository;
     private readonly IOrderService _orderService;

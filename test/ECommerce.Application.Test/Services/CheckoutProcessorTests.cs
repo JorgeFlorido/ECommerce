@@ -29,7 +29,7 @@ namespace ECommerce.Application.Tests.Services
     }
 
     [Test]
-    public async Task CalculateOrderCostAsync_ShouldCalculateAllComponents()
+    public async Task GivenValidOrderWithDiscount_WhenCalculatingOrderCost_ThenShouldCalculateAllComponents()
     {
       // Arrange
       var request = new OrderCostCalculationQuery
@@ -63,7 +63,7 @@ namespace ECommerce.Application.Tests.Services
     }
 
     [Test]
-    public async Task CalculateOrderCostAsync_ShouldNotApplyDiscount_WhenNoDiscountCode()
+    public async Task GivenOrderWithoutDiscountCode_WhenCalculatingOrderCost_ThenShouldNotApplyDiscount()
     {
       // Arrange
       var request = new OrderCostCalculationQuery
@@ -96,7 +96,7 @@ namespace ECommerce.Application.Tests.Services
     }
 
     [Test]
-    public async Task CalculateOrderCostAsync_ShouldNotApplyDiscount_WhenDiscountCodeIsInvalid()
+    public async Task GivenInvalidDiscountCode_WhenCalculatingOrderCost_ThenShouldNotApplyDiscount()
     {
       // Arrange
       var request = new OrderCostCalculationQuery
@@ -129,7 +129,7 @@ namespace ECommerce.Application.Tests.Services
     }
 
     [Test]
-    public async Task CalculateOrderCostAsync_ShouldReturnZeroAmounts_WhenNoItems()
+    public async Task GivenEmptyOrderItems_WhenCalculatingOrderCost_ThenShouldReturnZeroAmounts()
     {
       // Arrange
       var request = new OrderCostCalculationQuery
@@ -158,7 +158,7 @@ namespace ECommerce.Application.Tests.Services
     }
 
     [Test]
-    public async Task CalculateOrderCostAsync_ShouldSumAmounts_ForMultipleItems() 
+    public async Task GivenMultipleItems_WhenCalculatingOrderCost_ThenShouldSumAmountsCorrectly() 
     {
       // Arrange
       var request = new OrderCostCalculationQuery
@@ -191,7 +191,7 @@ namespace ECommerce.Application.Tests.Services
     }
 
     [Test]
-    public async Task CalculateOrderCostAsync_ShouldHandleZeroTaxRate() 
+    public async Task GivenZeroTaxRate_WhenCalculatingOrderCost_ThenShouldNotApplyTax() 
     {
       // Arrange
       var request = new OrderCostCalculationQuery
@@ -223,7 +223,7 @@ namespace ECommerce.Application.Tests.Services
     }
 
     [Test]
-    public async Task CalculateOrderCostAsync_ShouldHandleZeroShippingCost() 
+    public async Task GivenZeroShippingCost_WhenCalculatingOrderCost_ThenShouldNotIncludeShipping() 
     {
       // Arrange
       var request = new OrderCostCalculationQuery
@@ -255,7 +255,7 @@ namespace ECommerce.Application.Tests.Services
     }
 
     [Test]
-    public async Task CalculateOrderCostAsync_ShouldNotAllowNegativeTotal_WhenDiscountExceedsGross() 
+    public async Task GivenDiscountExceedingGrossAmount_WhenCalculatingOrderCost_ThenShouldNotAllowNegativeTotal() 
     {
       // Arrange
       var request = new OrderCostCalculationQuery
@@ -287,7 +287,7 @@ namespace ECommerce.Application.Tests.Services
     }
 
     [Test]
-    public void CalculateOrderCostAsync_ShouldThrow_WhenTaxServiceThrows() 
+    public void GivenTaxServiceError_WhenCalculatingOrderCost_ThenShouldThrowException() 
     { 
 
     }

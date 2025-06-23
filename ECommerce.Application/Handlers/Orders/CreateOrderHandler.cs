@@ -58,6 +58,11 @@ namespace ECommerce.Application.Handlers.Orders
 
       foreach (var item in request.Items)
       {
+        if (item.Quantity <= 0)
+        {
+          throw new ArgumentException("Order item quantity must be greater than zero.");
+        }
+
         var product = await _productRepository.GetProductByIdAsync(item.ProductId, cancellationToken);
         if (product == null)
         {
@@ -72,14 +77,26 @@ namespace ECommerce.Application.Handlers.Orders
         });
       }
 
+      var shippingAddress = _addressFactory.CreateShippingAddress(request.ShippingAddress, request.CustomerId);
+      if (shippingAddress == null)
+      {
+        throw new ArgumentException("Invalid shipping address data.");
+      }
+
+      var billingAddress = _addressFactory.CreateBillingAddress(request.BillingAddress, request.CustomerId);
+      if (billingAddress == null)
+      {
+        throw new ArgumentException("Invalid billing address data.");
+      }
+
       var order = new Order
       {
         CustomerId = request.CustomerId,
         OrderDate = DateTime.UtcNow,
         Status = OrderStatus.Pending,
         Items = orderItems,
-        ShippingAddress = _addressFactory.CreateShippingAddress(request.ShippingAddress, request.CustomerId),
-        BillingAddress = _addressFactory.CreateBillingAddress(request.BillingAddress, request.CustomerId),
+        ShippingAddress = shippingAddress,
+        BillingAddress = billingAddress,
         DiscountCode = null
       };
 

@@ -37,7 +37,7 @@ namespace ECommerce.Application.Test.Handlers.Orders
     }
 
     [Test]
-    public async Task Handle_ShouldCreateOrderSuccessfully()
+    public async Task GivenValidOrderCommand_WhenHandlingRequest_ThenShouldCreateOrderSuccessfully()
     {
       // Arrange
       var request = new CreateOrderCommand
@@ -70,7 +70,7 @@ namespace ECommerce.Application.Test.Handlers.Orders
     }
 
     [Test]
-    public async Task Handle_ShouldThrow_WhenCustomerNotFound()
+    public async Task GivenNonExistentCustomerId_WhenHandlingRequest_ThenShouldThrowArgumentException()
     {
       // Arrange
       var command = new CreateOrderCommand
@@ -96,7 +96,7 @@ namespace ECommerce.Application.Test.Handlers.Orders
     }
 
     [Test]
-    public async Task Handle_ShouldThrow_WhenProductNotFound()
+    public async Task GivenNonExistentProductId_WhenHandlingRequest_ThenShouldThrowArgumentException()
     {
       // Arrange
       var command = new CreateOrderCommand
@@ -127,7 +127,7 @@ namespace ECommerce.Application.Test.Handlers.Orders
     }
 
     [Test]
-    public async Task Handle_ShouldThrow_WhenNoOrderItems()
+    public async Task GivenEmptyOrderItems_WhenHandlingRequest_ThenShouldThrowArgumentException()
     {
       // Arrange
       var command = new CreateOrderCommand
@@ -151,7 +151,7 @@ namespace ECommerce.Application.Test.Handlers.Orders
     }
 
     [Test]
-    public async Task Handle_ShouldThrow_WhenShippingAddressIsNull()
+    public async Task GivenNullShippingAddress_WhenHandlingRequest_ThenShouldThrowArgumentException()
     {
       // Arrange
       var command = new CreateOrderCommand
@@ -181,7 +181,7 @@ namespace ECommerce.Application.Test.Handlers.Orders
     }
 
     [Test]
-    public async Task Handle_ShouldThrow_WhenBillingAddressIsNull()
+    public async Task GivenNullBillingAddress_WhenHandlingRequest_ThenShouldThrowArgumentException()
     {
       // Arrange
       var command = new CreateOrderCommand
@@ -209,6 +209,116 @@ namespace ECommerce.Application.Test.Handlers.Orders
       // Assert
       await action.Should().ThrowAsync<ArgumentException>()
         .WithMessage("Billing address is required.");
+    }
+
+    [Test]
+    public async Task GivenZeroQuantity_WhenHandlingRequest_ThenShouldThrowArgumentException()
+    {
+      // Arrange
+      var request = new CreateOrderCommand
+      {
+        CustomerId = Guid.NewGuid(),
+        Items = [new OrderItemCommand { ProductId = Guid.NewGuid(), Quantity = 0 }],
+        ShippingAddress = new CustomerShippingAddressCommand(),
+        BillingAddress = new OrderBillingAddressCommand()
+      };
+
+      var customer = new CustomerBuilder().WithId(request.CustomerId).Build();
+      var product = new ProductBuilder().WithId(request.Items[0].ProductId).Build();
+
+      _customerRepo.GetCustomerByIdAsync(request.CustomerId, Arg.Any<CancellationToken>()).Returns(customer);
+      _productRepo.GetProductByIdAsync(request.Items[0].ProductId, Arg.Any<CancellationToken>()).Returns(product);
+
+      // Act
+      Func<Task> action = async () => await _handler.Handle(request, CancellationToken.None);
+
+      // Assert
+      await action.Should().ThrowAsync<ArgumentException>()
+          .WithMessage("Order item quantity must be greater than zero.");
+    }
+
+    [Test]
+    public async Task GivenNegativeQuantity_WhenHandlingRequest_ThenShouldThrowArgumentException()
+    {
+      // Arrange
+      var request = new CreateOrderCommand
+      {
+        CustomerId = Guid.NewGuid(),
+        Items = [new OrderItemCommand { ProductId = Guid.NewGuid(), Quantity = -1 }],
+        ShippingAddress = new CustomerShippingAddressCommand(),
+        BillingAddress = new OrderBillingAddressCommand()
+      };
+
+      var customer = new CustomerBuilder().WithId(request.CustomerId).Build();
+      var product = new ProductBuilder().WithId(request.Items[0].ProductId).Build();
+
+      _customerRepo.GetCustomerByIdAsync(request.CustomerId, Arg.Any<CancellationToken>()).Returns(customer);
+      _productRepo.GetProductByIdAsync(request.Items[0].ProductId, Arg.Any<CancellationToken>()).Returns(product);
+
+      // Act
+      Func<Task> action = async () => await _handler.Handle(request, CancellationToken.None);
+
+      // Assert
+      await action.Should().ThrowAsync<ArgumentException>()
+          .WithMessage("Order item quantity must be greater than zero.");
+    }
+
+    [Test]
+    public async Task GivenInvalidShippingAddress_WhenHandlingRequest_ThenShouldThrowArgumentException()
+    {
+      // Arrange
+      var request = new CreateOrderCommand
+      {
+        CustomerId = Guid.NewGuid(),
+        Items = [new OrderItemCommand { ProductId = Guid.NewGuid(), Quantity = 1 }],
+        ShippingAddress = new CustomerShippingAddressCommand(),
+        BillingAddress = new OrderBillingAddressCommand()
+      };
+
+      var customer = new CustomerBuilder().WithId(request.CustomerId).Build();
+      var product = new ProductBuilder().WithId(request.Items[0].ProductId).Build();
+
+      _customerRepo.GetCustomerByIdAsync(request.CustomerId, Arg.Any<CancellationToken>()).Returns(customer);
+      _productRepo.GetProductByIdAsync(request.Items[0].ProductId, Arg.Any<CancellationToken>()).Returns(product);
+      _addressFactory.CreateShippingAddress(request.ShippingAddress, request.CustomerId)
+          .Returns((OrderShippingAddress)null);
+
+      // Act
+      Func<Task> action = async () => await _handler.Handle(request, CancellationToken.None);
+
+      // Assert
+      await action.Should().ThrowAsync<ArgumentException>()
+          .WithMessage("Invalid shipping address data.");
+    }
+
+    [Test]
+    public async Task GivenInvalidBillingAddress_WhenHandlingRequest_ThenShouldThrowArgumentException()
+    {
+      // Arrange
+      var request = new CreateOrderCommand
+      {
+        CustomerId = Guid.NewGuid(),
+        Items = [new OrderItemCommand { ProductId = Guid.NewGuid(), Quantity = 1 }],
+        ShippingAddress = new CustomerShippingAddressCommand(),
+        BillingAddress = new OrderBillingAddressCommand()
+      };
+
+      var customer = new CustomerBuilder().WithId(request.CustomerId).Build();
+      var product = new ProductBuilder().WithId(request.Items[0].ProductId).Build();
+
+      _customerRepo.GetCustomerByIdAsync(request.CustomerId, Arg.Any<CancellationToken>()).Returns(customer);
+      _productRepo.GetProductByIdAsync(request.Items[0].ProductId, Arg.Any<CancellationToken>()).Returns(product);
+      _addressFactory.CreateShippingAddress(request.ShippingAddress, request.CustomerId)
+          .Returns(new OrderShippingAddress());
+      _addressFactory.CreateBillingAddress(request.BillingAddress, request.CustomerId)
+          .Returns((OrderBillingAddress)null);
+
+      // Act
+      Func<Task> action = async () => await _handler.Handle(request, CancellationToken.None);
+
+      // Assert
+      await action.Should().ThrowAsync<ArgumentException>()
+          .WithMessage("Invalid billing address data.");
     }
   }
 }

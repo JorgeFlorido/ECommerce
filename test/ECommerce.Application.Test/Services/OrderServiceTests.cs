@@ -28,7 +28,7 @@ namespace ECommerce.Application.Tests.Services
     }
 
     [Test]
-    public async Task CalculateOrderCostAsync_ShouldReturnResult_FromCheckoutProcessor()
+    public async Task GivenValidOrderCostQuery_WhenCalculatingOrderCost_ThenShouldReturnProcessorResult()
     {
       // Arrange
       var query = new OrderCostCalculationQuery();
@@ -44,7 +44,7 @@ namespace ECommerce.Application.Tests.Services
     }
 
     [Test]
-    public async Task CreateOrderAsync_ShouldReturnFailure_WhenOutOfStock()
+    public async Task GivenOutOfStockItems_WhenCreatingOrder_ThenShouldReturnFailure()
     {
       // Arrange
       var order = new Order { Items = new List<OrderItem>() };
@@ -65,7 +65,7 @@ namespace ECommerce.Application.Tests.Services
     }
 
     [Test]
-    public async Task CreateOrderAsync_ShouldReturnSuccess_WhenAllInStock()
+    public async Task GivenAllItemsInStock_WhenCreatingOrder_ThenShouldReturnSuccess()
     {
       // Arrange
       var order = new Order { Id = Guid.NewGuid(), Items = new List<OrderItem>() };
@@ -85,7 +85,7 @@ namespace ECommerce.Application.Tests.Services
     }
 
     [Test]
-    public async Task ProcessOrderAsync_ShouldReturnFalse_WhenOrderNotFound()
+    public async Task GivenNonExistentOrderId_WhenProcessingOrder_ThenShouldReturnFalse()
     {
       // Arrange
       _orderRepository.GetOrderByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
@@ -99,7 +99,7 @@ namespace ECommerce.Application.Tests.Services
     }
 
     [Test]
-    public async Task ProcessOrderAsync_ShouldReturnFalse_WhenPaymentFails()
+    public async Task GivenFailedPayment_WhenProcessingOrder_ThenShouldReturnFalse()
     {
       // Arrange
       var order = new Order();
@@ -116,7 +116,7 @@ namespace ECommerce.Application.Tests.Services
     }
 
     [Test]
-    public async Task ProcessOrderAsync_ShouldUpdateOrderStatus_WhenPaymentSucceeds()
+    public async Task GivenSuccessfulPayment_WhenProcessingOrder_ThenShouldUpdateStatusAndReturnTrue()
     {
       // Arrange
       var order = new Order();
@@ -127,6 +127,92 @@ namespace ECommerce.Application.Tests.Services
 
       // Act
       var result = await _service.ProcessOrderAsync(Guid.NewGuid());
+
+      // Assert
+      result.Should().BeTrue();
+      order.Status.Should().Be(OrderStatus.Processing);
+      await _orderRepository.Received(1).UpdateOrderAsync(order, Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task GivenConcurrentRequests_WhenProcessingOrder_ThenShouldHandleConcurrencyCorrectly()
+    {
+      // Arrange
+      var orderId = Guid.NewGuid();
+      var order = new Order { Id = orderId };
+      var concurrentOrder = new Order { Id = orderId };
+
+      _orderRepository.GetOrderByIdAsync(orderId, Arg.Any<CancellationToken>())
+          .Returns(order, concurrentOrder);
+      _paymentProcessor.ProcessPaymentAsync(order, Arg.Any<CancellationToken>())
+          .Returns(true);
+
+      // Act
+      var task1 = _service.ProcessOrderAsync(orderId);
+      var task2 = _service.ProcessOrderAsync(orderId);
+
+      // Assert
+      var results = await Task.WhenAll(task1, task2);
+      results.Should().Contain(true); // At least one should succeed
+      await _orderRepository.Received(2).GetOrderByIdAsync(orderId, Arg.Any<CancellationToken>());
+      await _orderRepository.Received(1).UpdateOrderAsync(Arg.Any<Order>(), Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task GivenPaymentTimeout_WhenProcessingOrder_ThenShouldReturnFalse()
+    {
+      // Arrange
+      var orderId = Guid.NewGuid();
+      var order = new Order { Id = orderId };
+      var cts = new CancellationTokenSource();
+      cts.Cancel(); // Simulate timeout
+
+      _orderRepository.GetOrderByIdAsync(orderId, Arg.Any<CancellationToken>())
+          .Returns(order);
+      _paymentProcessor.ProcessPaymentAsync(order, cts.Token)
+          .Returns(Task.FromCanceled<bool>(cts.Token));
+
+      // Act
+      var result = await _service.ProcessOrderAsync(orderId, cts.Token);
+
+      // Assert
+      result.Should().BeFalse();
+      await _orderRepository.DidNotReceive().UpdateOrderAsync(Arg.Any<Order>(), Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task GivenInvalidStatusTransition_WhenProcessingOrder_ThenShouldReturnFalse()
+    {
+      // Arrange
+      var orderId = Guid.NewGuid();
+      var order = new Order { Id = orderId, Status = OrderStatus.Canceled };
+
+      _orderRepository.GetOrderByIdAsync(orderId, Arg.Any<CancellationToken>())
+          .Returns(order);
+
+      // Act
+      var result = await _service.ProcessOrderAsync(orderId);
+
+      // Assert
+      result.Should().BeFalse();
+      await _paymentProcessor.DidNotReceive().ProcessPaymentAsync(Arg.Any<Order>(), Arg.Any<CancellationToken>());
+      await _orderRepository.DidNotReceive().UpdateOrderAsync(Arg.Any<Order>(), Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task GivenValidStatusTransition_WhenProcessingOrder_ThenShouldUpdateStatus()
+    {
+      // Arrange
+      var orderId = Guid.NewGuid();
+      var order = new Order { Id = orderId, Status = OrderStatus.Pending };
+
+      _orderRepository.GetOrderByIdAsync(orderId, Arg.Any<CancellationToken>())
+          .Returns(order);
+      _paymentProcessor.ProcessPaymentAsync(order, Arg.Any<CancellationToken>())
+          .Returns(true);
+
+      // Act
+      var result = await _service.ProcessOrderAsync(orderId);
 
       // Assert
       result.Should().BeTrue();

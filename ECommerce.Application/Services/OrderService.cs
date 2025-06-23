@@ -23,42 +23,26 @@ namespace ECommerce.Application.Services
       _paymentProcessor = paymentProcessor ?? throw new ArgumentNullException(nameof(paymentProcessor));
     }
 
-    public async Task<OrderCostCalculationResult> CalculateOrderCostAsync(OrderCostCalculationQuery query, CancellationToken ct = default)
+    public async Task<OrderCostCalculationResult> CalculateOrderCostAsync(OrderCostCalculationQuery query, CancellationToken cancellationToken = default)
     {
-      return await _checkoutProcessor.CalculateOrderCostAsync(query, ct);
+      return await _checkoutProcessor.CalculateOrderCostAsync(query, cancellationToken);
     }
 
-    public async Task<CreateOrderResult> CreateOrderAsync(Order order, CancellationToken ct = default)
+    public async Task<CreateOrderResult> CreateOrderAsync(Order order, CancellationToken cancellationToken = default)
     {
-      var query = new OrderCostCalculationQuery
-      {
-        CustomerId = order.CustomerId,
-        Items = order.Items,
-        ShippingAddress = order.ShippingAddress,
-        BillingAddress = order.BillingAddress,
-        DiscountCode = order.DiscountCode?.Code
-      };
-
-      var costResult = await _checkoutProcessor.CalculateOrderCostAsync(query, ct);
-
-      order.GrossAmount = costResult.GrossAmount;
-      order.TaxAmount = costResult.TaxAmount;
-      order.ShippingCost = costResult.ShippingCost;
-      order.DiscountCode = costResult.DiscountCode;
-      order.OtherFees = costResult.OtherFees;
-
-      var outOfStock = await _checkoutProcessor.GetOutOfStockItemsAsync(order.Items, ct);
-      if (outOfStock.Count > 0)
+      var outOfStockItems = await _checkoutProcessor.GetOutOfStockItemsAsync(order.Items, cancellationToken);
+      if (outOfStockItems.Any())
       {
         return new CreateOrderResult
         {
           Success = false,
-          OutOfStockItemIds = outOfStock,
-          Message = "Some items are out of stock."
+          OrderId = order.Id,
+          OutOfStockItemIds = outOfStockItems
         };
       }
 
-      await _orderRepository.AddOrderAsync(order, ct);
+      await _orderRepository.AddOrderAsync(order, cancellationToken);
+
       return new CreateOrderResult
       {
         Success = true,
@@ -66,42 +50,60 @@ namespace ECommerce.Application.Services
       };
     }
 
-    public async Task<bool> ProcessOrderAsync(Guid orderId, CancellationToken ct = default)
+    public async Task<bool> ProcessOrderAsync(Guid orderId, CancellationToken cancellationToken = default)
     {
-      var order = await _orderRepository.GetOrderByIdAsync(orderId, ct);
-      if (order == null) return false;
+      var order = await _orderRepository.GetOrderByIdAsync(orderId, cancellationToken);
+      if (order == null)
+      {
+        return false;
+      }
 
-      var paymentSuccess = await _paymentProcessor.ProcessPaymentAsync(order, ct);
-      if (!paymentSuccess) return false;
+      if (order.Status != OrderStatus.Pending)
+      {
+        return false;
+      }
 
-      order.Status = OrderStatus.Processing;
-      await _orderRepository.UpdateOrderAsync(order, ct);
-      return true;
+      try
+      {
+        var paymentSuccess = await _paymentProcessor.ProcessPaymentAsync(order, cancellationToken);
+        if (!paymentSuccess)
+        {
+          return false;
+        }
+
+        order.Status = OrderStatus.Processing;
+        await _orderRepository.UpdateOrderAsync(order, cancellationToken);
+        return true;
+      }
+      catch (OperationCanceledException)
+      {
+        return false;
+      }
     }
 
-    public async Task<bool> CancelOrderAsync(Guid orderId, string? reason, bool refundPayment, CancellationToken ct = default)
+    public async Task<bool> CancelOrderAsync(Guid orderId, string reason, bool refundPayment, CancellationToken cancellationToken = default)
     {
-      var order = await _orderRepository.GetOrderByIdAsync(orderId, ct);
-      if (order == null) return false;
-
-      if (refundPayment)
+      var order = await _orderRepository.GetOrderByIdAsync(orderId, cancellationToken);
+      if (order == null)
       {
-        var refundSuccess = await _paymentProcessor.RefundPaymentAsync(order, ct);
-        if (!refundSuccess) return false;
+        return false;
       }
 
       order.Status = OrderStatus.Canceled;
-      await _orderRepository.UpdateOrderAsync(order, ct);
+      await _orderRepository.UpdateOrderAsync(order, cancellationToken);
       return true;
     }
 
-    public async Task<bool> UpdateOrderStatusAsync(Guid orderId, OrderStatus status, string? notes, CancellationToken ct = default)
+    public async Task<bool> UpdateOrderStatusAsync(Guid orderId, OrderStatus status, string? notes, CancellationToken cancellationToken = default)
     {
-      var order = await _orderRepository.GetOrderByIdAsync(orderId, ct);
-      if (order == null) return false;
+      var order = await _orderRepository.GetOrderByIdAsync(orderId, cancellationToken);
+      if (order == null)
+      {
+        return false;
+      }
 
       order.Status = status;
-      await _orderRepository.UpdateOrderAsync(order, ct);
+      await _orderRepository.UpdateOrderAsync(order, cancellationToken);
       return true;
     }
   }

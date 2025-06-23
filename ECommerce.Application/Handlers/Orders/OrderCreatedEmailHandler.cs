@@ -14,8 +14,15 @@ namespace ECommerce.Application.Handlers.Orders
 
         public async Task Handle(OrderCreatedEvent domainEvent, CancellationToken cancellationToken)
         {
-            var message = $"Your order {domainEvent.OrderId} has been created.";
-            await _notificationService.SendNotificationAsync(domainEvent.CustomerId, message);
+            try
+            {
+                var message = $"Your order {domainEvent.OrderId} has been created.";
+                await _notificationService.SendNotificationAsync(domainEvent.CustomerId, message);
+            }
+            catch
+            {
+                // Notification failures should not stop order processing
+            }
         }
     }
 } 
