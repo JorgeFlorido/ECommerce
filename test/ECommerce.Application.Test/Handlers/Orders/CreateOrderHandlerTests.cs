@@ -76,10 +76,10 @@ namespace ECommerce.Application.Test.Handlers.Orders
       var command = new CreateOrderCommand
       {
         CustomerId = Guid.NewGuid(),
-        Items = new List<OrderItemCommand>
-              {
+        Items =
+              [
                 new OrderItemCommand { ProductId = Guid.NewGuid(), Quantity = 1 }
-              },
+              ],
         ShippingAddress = new CustomerShippingAddressCommand(),
         BillingAddress = new OrderBillingAddressCommand()
       };
@@ -102,10 +102,10 @@ namespace ECommerce.Application.Test.Handlers.Orders
       var command = new CreateOrderCommand
       {
         CustomerId = Guid.NewGuid(),
-        Items = new List<OrderItemCommand>
-              {
+        Items =
+              [
                 new OrderItemCommand { ProductId = Guid.NewGuid(), Quantity = 1 }
-              },
+              ],
         ShippingAddress = new CustomerShippingAddressCommand(),
         BillingAddress = new OrderBillingAddressCommand()
       };
@@ -148,6 +148,58 @@ namespace ECommerce.Application.Test.Handlers.Orders
       // Assert
       await action.Should().ThrowAsync<ArgumentException>()
         .WithMessage("Order must contain at least one product.");
+    }
+
+    [Test]
+    public async Task GivenZeroQuantity_WhenHandlingRequest_ThenShouldThrowArgumentException()
+    {
+      // Arrange
+      var request = new CreateOrderCommand
+      {
+        CustomerId = Guid.NewGuid(),
+        Items = [new OrderItemCommand { ProductId = Guid.NewGuid(), Quantity = 0 }],
+        ShippingAddress = new CustomerShippingAddressCommand(),
+        BillingAddress = new OrderBillingAddressCommand()
+      };
+
+      var customer = new CustomerBuilder().WithId(request.CustomerId).Build();
+      var product = new ProductBuilder().WithId(request.Items[0].ProductId).Build();
+
+      _customerRepo.GetCustomerByIdAsync(request.CustomerId, Arg.Any<CancellationToken>()).Returns(customer);
+      _productRepo.GetProductByIdAsync(request.Items[0].ProductId, Arg.Any<CancellationToken>()).Returns(product);
+
+      // Act
+      Func<Task> action = async () => await _handler.Handle(request, CancellationToken.None);
+
+      // Assert
+      await action.Should().ThrowAsync<ArgumentException>()
+          .WithMessage("Order item quantity must be greater than zero.");
+    }
+
+    [Test]
+    public async Task GivenNegativeQuantity_WhenHandlingRequest_ThenShouldThrowArgumentException()
+    {
+      // Arrange
+      var request = new CreateOrderCommand
+      {
+        CustomerId = Guid.NewGuid(),
+        Items = [new OrderItemCommand { ProductId = Guid.NewGuid(), Quantity = -1 }],
+        ShippingAddress = new CustomerShippingAddressCommand(),
+        BillingAddress = new OrderBillingAddressCommand()
+      };
+
+      var customer = new CustomerBuilder().WithId(request.CustomerId).Build();
+      var product = new ProductBuilder().WithId(request.Items[0].ProductId).Build();
+
+      _customerRepo.GetCustomerByIdAsync(request.CustomerId, Arg.Any<CancellationToken>()).Returns(customer);
+      _productRepo.GetProductByIdAsync(request.Items[0].ProductId, Arg.Any<CancellationToken>()).Returns(product);
+
+      // Act
+      Func<Task> action = async () => await _handler.Handle(request, CancellationToken.None);
+
+      // Assert
+      await action.Should().ThrowAsync<ArgumentException>()
+          .WithMessage("Order item quantity must be greater than zero.");
     }
 
     [Test]
@@ -209,58 +261,6 @@ namespace ECommerce.Application.Test.Handlers.Orders
       // Assert
       await action.Should().ThrowAsync<ArgumentException>()
         .WithMessage("Billing address is required.");
-    }
-
-    [Test]
-    public async Task GivenZeroQuantity_WhenHandlingRequest_ThenShouldThrowArgumentException()
-    {
-      // Arrange
-      var request = new CreateOrderCommand
-      {
-        CustomerId = Guid.NewGuid(),
-        Items = [new OrderItemCommand { ProductId = Guid.NewGuid(), Quantity = 0 }],
-        ShippingAddress = new CustomerShippingAddressCommand(),
-        BillingAddress = new OrderBillingAddressCommand()
-      };
-
-      var customer = new CustomerBuilder().WithId(request.CustomerId).Build();
-      var product = new ProductBuilder().WithId(request.Items[0].ProductId).Build();
-
-      _customerRepo.GetCustomerByIdAsync(request.CustomerId, Arg.Any<CancellationToken>()).Returns(customer);
-      _productRepo.GetProductByIdAsync(request.Items[0].ProductId, Arg.Any<CancellationToken>()).Returns(product);
-
-      // Act
-      Func<Task> action = async () => await _handler.Handle(request, CancellationToken.None);
-
-      // Assert
-      await action.Should().ThrowAsync<ArgumentException>()
-          .WithMessage("Order item quantity must be greater than zero.");
-    }
-
-    [Test]
-    public async Task GivenNegativeQuantity_WhenHandlingRequest_ThenShouldThrowArgumentException()
-    {
-      // Arrange
-      var request = new CreateOrderCommand
-      {
-        CustomerId = Guid.NewGuid(),
-        Items = [new OrderItemCommand { ProductId = Guid.NewGuid(), Quantity = -1 }],
-        ShippingAddress = new CustomerShippingAddressCommand(),
-        BillingAddress = new OrderBillingAddressCommand()
-      };
-
-      var customer = new CustomerBuilder().WithId(request.CustomerId).Build();
-      var product = new ProductBuilder().WithId(request.Items[0].ProductId).Build();
-
-      _customerRepo.GetCustomerByIdAsync(request.CustomerId, Arg.Any<CancellationToken>()).Returns(customer);
-      _productRepo.GetProductByIdAsync(request.Items[0].ProductId, Arg.Any<CancellationToken>()).Returns(product);
-
-      // Act
-      Func<Task> action = async () => await _handler.Handle(request, CancellationToken.None);
-
-      // Assert
-      await action.Should().ThrowAsync<ArgumentException>()
-          .WithMessage("Order item quantity must be greater than zero.");
     }
 
     [Test]

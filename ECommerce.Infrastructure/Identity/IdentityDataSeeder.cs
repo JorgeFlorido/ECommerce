@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using ECommerce.Application.Common.Constants;
 
 namespace ECommerce.Infrastructure.Identity
 {
@@ -6,7 +7,7 @@ namespace ECommerce.Infrastructure.Identity
   {
     public static async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
     {
-      var roles = new[] { "Admin", "User", "Guest" };
+      var roles = new[] { AppRoles.Admin, AppRoles.Customer, AppRoles.Guest };
       foreach (var role in roles)
       { 
         if (!await roleManager.RoleExistsAsync(role))

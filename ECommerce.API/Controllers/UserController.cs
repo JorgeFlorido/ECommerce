@@ -2,7 +2,9 @@
 using ECommerce.API.Models.Requests.User;
 using ECommerce.Application.Requests.Commands.Users;
 using ECommerce.Application.Requests.Queries.Users;
+using ECommerce.Application.Common.Constants;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerce.API.Controllers
@@ -20,6 +22,7 @@ namespace ECommerce.API.Controllers
       _mapper = mapper;
     }
 
+    [Authorize(Roles = nameof(AppRoles.Admin))]
     [HttpGet]
     public async Task<IActionResult> GetAllUsers()
     {
@@ -27,32 +30,39 @@ namespace ECommerce.API.Controllers
       return Ok(users);
     }
 
+    [Authorize(Policy = "CustomerData")]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetUserById(Guid id)
     {
+      HttpContext.Items["Resource"] = id.ToString();
       var result = await _mediator.Send(new GetUserByIdQuery { Id = id });
       return Ok(result);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> AddUser([FromBody] AddUserRequest userRequest)
+    [AllowAnonymous]
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] AddUserRequest userRequest)
     {
       var addUserCommand = _mapper.Map<AddUserCommand>(userRequest);
       var result = await _mediator.Send(addUserCommand);
       return CreatedAtAction(nameof(GetUserById), new { id = result }, result);
     }
 
+    [Authorize(Policy = "CustomerData")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteUser(Guid id)
     {
+      HttpContext.Items["Resource"] = id.ToString();
       var deleteUserCommand = new DeleteUserCommand { UserId = id };
       await _mediator.Send(deleteUserCommand);
       return NoContent();
     }
 
+    [Authorize(Policy = "CustomerData")]
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserRequest userRequest)
     {
+      HttpContext.Items["Resource"] = id.ToString();
       var updateUserCommand = _mapper.Map<UpdateUserCommand>(userRequest);
       updateUserCommand.UserId = id;
       var result = await _mediator.Send(updateUserCommand);

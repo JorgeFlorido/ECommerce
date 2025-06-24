@@ -2,7 +2,9 @@
 using ECommerce.API.Models.Requests.Product;
 using ECommerce.Application.Requests.Commands.Products;
 using ECommerce.Application.Requests.Queries.Products;
+using ECommerce.Application.Common.Constants;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerce.API.Controllers
@@ -20,6 +22,7 @@ namespace ECommerce.API.Controllers
       _mapper = mapper;
     }
 
+    [AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> GetAllProducts([FromQuery] GetAllProductsRequest request)
     {
@@ -28,26 +31,27 @@ namespace ECommerce.API.Controllers
       return Ok(products);
     }
 
+    [AllowAnonymous]
     [HttpGet("brands/{brandName}/products")]
     public async Task<IActionResult> GetProductsByBrand(string brandName, [FromQuery] GetAllProductsRequest request)
     {
       request.Filter.Brands = new List<string> { brandName };
-
       var query = _mapper.Map<GetAllProductsQuery>(request);
       var products = await _mediator.Send(query);
       return Ok(products);
     }
 
+    [AllowAnonymous]
     [HttpGet("categories/{categoryName}/products")]
     public async Task<IActionResult> GetProductsByCategory(string categoryName, [FromQuery] GetAllProductsRequest request)
     {
       request.Filter.Categories = new List<string> { categoryName };
-
       var query = _mapper.Map<GetAllProductsQuery>(request);
       var products = await _mediator.Send(query);
       return Ok(products);
     }
 
+    [AllowAnonymous]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetProductById(Guid id)
     {
@@ -55,6 +59,7 @@ namespace ECommerce.API.Controllers
       return Ok(result);
     }
 
+    [Authorize(Roles = nameof(AppRoles.Admin))]
     [HttpPost]
     public async Task<IActionResult> AddProduct([FromBody] AddProductRequest productRequest)
     {
@@ -63,14 +68,7 @@ namespace ECommerce.API.Controllers
       return CreatedAtAction(nameof(GetProductById), new { id = result }, result);
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteProduct(Guid id)
-    {
-      var deleteProductCommand = new DeleteProductCommand { ProductId = id };
-      await _mediator.Send(deleteProductCommand);
-      return NoContent();
-    }
-
+    [Authorize(Roles = nameof(AppRoles.Admin))]
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateProduct(Guid id, [FromBody] UpdateProductRequest productRequest)
     {
@@ -78,6 +76,15 @@ namespace ECommerce.API.Controllers
       updateProductCommand.ProductId = id;
       var result = await _mediator.Send(updateProductCommand);
       return Ok(result);
+    }
+
+    [Authorize(Roles = nameof(AppRoles.Admin))]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteProduct(Guid id)
+    {
+      var deleteProductCommand = new DeleteProductCommand { ProductId = id };
+      await _mediator.Send(deleteProductCommand);
+      return NoContent();
     }
   }
 }
