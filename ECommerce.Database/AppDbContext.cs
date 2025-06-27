@@ -16,7 +16,6 @@ namespace ECommerce.Database
     public DbSet<CustomerAddress> CustomerAddresses { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
-    public DbSet<Payment> Payments { get; set; }
     public DbSet<Cart> Carts { get; set; }
 
     public AppDbContext(IDomainEventDispatcher domainEventDispatcher)

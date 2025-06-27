@@ -1,9 +1,6 @@
 ﻿using ECommerce.Domain.Common.Models;
 using ECommerce.Domain.Models;
 using ECommerce.Domain.Models.Product;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ECommerce.Domain.Abstractions
 {

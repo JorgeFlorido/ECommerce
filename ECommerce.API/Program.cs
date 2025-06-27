@@ -1,8 +1,7 @@
-using ECommerce.Infrastructure.Extensions;
-using ECommerce.Application.Extensions;
 using ECommerce.API.Extensions;
 using ECommerce.Application.Common.Constants;
-using Microsoft.AspNetCore.Authorization;
+using ECommerce.Application.Extensions;
+using ECommerce.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
